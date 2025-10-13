@@ -2,8 +2,24 @@
 #include "can.h"
 
 uint32_t mailbox;
+uint32_t IT_can_mask = CAN_IT_RX_FIFO0_MSG_PENDING;
 
+void can_init(void)
+{
+  MX_CAN_Init();
+  HAL_CAN_Start(&hcan);
+  can_enable_IT(); // Активация прерываний
+}
 
+void can_enable_IT(void)
+{
+  HAL_CAN_ActivateNotification(&hcan, IT_can_mask);
+}
+
+void can_disable_IT(void)
+{
+  HAL_CAN_DeactivateNotification(&hcan, IT_can_mask);
+}
 
 void can_conf_filter(CANopenFilterConfig *filter)
 {

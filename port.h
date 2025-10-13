@@ -19,7 +19,13 @@ typedef struct
     uint8_t end_bank;
 } CANopenFilterConfig;
 
+
+void can_init();
 void can_conf_filter(CANopenFilterConfig *filter);
 void can_send_packet(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlc, uint8_t* data);
+void can_enable_IT(void);
+void can_disable_IT(void);
+
+extern uint32_t mailbox;
 
 #endif // PORT_H
