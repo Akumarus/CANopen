@@ -60,7 +60,7 @@ typedef struct
   uint8_t  data[COB_SIZE_SDO];
 } CANopen_SDO;
 
-typedef void (*canopen_pdo_rxcallback)(uint32_t id, uint8_t data, uint8_t dlc);
+typedef void (*canopen_pdo_rxcallback)(uint32_t id, uint8_t *data, uint8_t dlc);
 
 typedef struct {
   uint32_t id;
@@ -77,15 +77,17 @@ typedef struct {
 
 
 
-void CANopen_init(CANopen *canopen, uint32_t ide);
-void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo);
-CANopen_Status CANopen_config_filter_list_16b(CANopen *canopen, uint16_t id1, uint16_t id2, uint16_t id3, uint16_t id4, uint8_t fifo);
+void canopen_init(CANopen *canopen, uint32_t ide);
+void canopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo);
+CANopen_Status canopen_config_filter_list_16b(CANopen *canopen, uint16_t id1, uint16_t id2, uint16_t id3, uint16_t id4, uint8_t fifo);
+CANopen_Status canopen_register_pdo_rx_callback(CANopen *canopen, uint32_t id, canopen_pdo_rxcallback callback);
 
+void canopen_pdo_config(CANopen *canopen, CANopen_PDO *pdo, uint32_t id, uint32_t dlc);
+void canopen_process_rx_message(uint32_t id, uint8_t *data, uint8_t dlc);
 
-
-void CANopen_send_pdo();
-void CANopen_send_sdo();
-void CANopen_read_pdo();
-void CANopen_read_sdo();
+void canopen_send_pdo();
+void canopen_send_sdo();
+void canopen_read_pdo();
+void canopen_read_sdo();
 
 #endif // CAN_OPEN_H
