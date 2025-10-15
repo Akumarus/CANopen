@@ -7,8 +7,17 @@
 #define COB_SIZE_PDO COB_SIZE_DEF // communication object
 #define COB_SIZE_SDO            4 // communication object
 #define MAX_BANK_COUNT          14
+#define IDS_PER_BANK            4
+#define MAX_CALLBACKS           10
+#define MAX_11BIT_ID            0x7FF
 
+typedef void (*canopen_callback)(uint32_t id, uint8_t *data, uint8_t dlc);
 
+typedef enum
+{
+  COB_RX_FIFO0 = 0x00000000U, /*!< CAN receive FIFO 0 */
+  COB_RX_FIFO1 = 0x00000001U  /*!< CAN receive FIFO 1 */
+}RxFifoType;
 
 typedef enum
 {
@@ -38,10 +47,24 @@ typedef enum
 
 typedef enum
 {
-  OK = 0,
-  NO_BANK,
-  NO_CALLBACK,
-} CANopen_Status;
+  CANOPEN_OK = 0,
+  CANOPEN_ERROR,
+} CANopen_State;
+
+typedef union
+{
+  uint16_t all;
+  struct 
+  {
+    uint16_t inited : 1;
+    uint16_t filter_banks_full : 1;
+    uint16_t callbacks_full : 1;
+    uint16_t invalid_id : 1;
+    uint16_t invalid_dlc : 1;
+    uint16_t invalid_fifo : 1;
+    uint16_t reserv : 10;
+  } bit;
+}CANopenStatus;
 
 typedef struct 
 {
@@ -54,36 +77,42 @@ typedef struct
 typedef struct 
 {
   uint32_t id;
+  uint32_t ide;
   uint8_t  cmd;
   uint16_t index;
   uint8_t  sub_index;
-  uint8_t  data[COB_SIZE_SDO];
+  uint32_t data;
 } CANopen_SDO;
-
-typedef void (*canopen_pdo_rxcallback)(uint32_t id, uint8_t *data, uint8_t dlc);
 
 typedef struct {
   uint32_t id;
-  uint8_t data[COB_SIZE_PDO];
-  canopen_pdo_rxcallback callback;
+  canopen_callback callback;
 } CAN_Handler;
+
+typedef struct {
+  uint32_t ids[IDS_PER_BANK];
+  uint8_t used_count;
+  uint8_t fifo_assignment;
+} FilterBank;
 
 typedef struct {
   uint32_t ide; // CAN_identifier_type
   uint32_t tx_mailbox;
-  uint32_t bank_count;
-  CANopen_Status status;
+  FilterBank bank_list[MAX_BANK_COUNT];
+  uint8_t bank_count;
+  CANopenStatus status;
+  CAN_Handler callbacks[MAX_CALLBACKS];
+  uint8_t callbacks_count;
 } CANopen;
-
-
 
 void canopen_init(CANopen *canopen, uint32_t ide);
 void canopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo);
-CANopen_Status canopen_config_filter_list_16b(CANopen *canopen, uint16_t id1, uint16_t id2, uint16_t id3, uint16_t id4, uint8_t fifo);
-CANopen_Status canopen_register_pdo_rx_callback(CANopen *canopen, uint32_t id, canopen_pdo_rxcallback callback);
+CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint8_t fifo);
 
-void canopen_pdo_config(CANopen *canopen, CANopen_PDO *pdo, uint32_t id, uint32_t dlc);
-void canopen_process_rx_message(uint32_t id, uint8_t *data, uint8_t dlc);
+CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, canopen_callback callback);
+CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *pdo, uint32_t dlc);
+
+void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc);
 
 void canopen_send_pdo();
 void canopen_send_sdo();

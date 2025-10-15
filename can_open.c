@@ -2,48 +2,76 @@
 #include "port.h"
 #include <string.h>
 
+static CANopen_State is_valid_id(CANopen *canopen, uint16_t id);
+static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo);
+static CANopen_State is_valid_bank(CANopen *canopen);
+
 void canopen_init(CANopen *canopen, uint32_t ide)
 {
   if (canopen == NULL)
     return;
 
-  // memset(canopen, 0, sizeof(CANopen));
   canopen->ide = ide;
+  canopen->bank_count = 0;
+  canopen->status.all = 0;
+  canopen->callbacks_count = 0;
+  for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
+  {
+    canopen->callbacks->id = 0;
+    canopen->callbacks->callback = NULL;
+  }
+
   can_init();
 }
 
 
-void canopen_pdo_config(CANopen *canopen, CANopen_PDO *pdo, uint32_t id, uint32_t dlc)
+CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint8_t fifo)
 {
-  pdo->id = id;
-  pdo->dlс = dlc;
-  pdo->ide = canopen->ide;
-  memset(pdo->data, 0, sizeof(pdo->data));
-}
+  CANopen_State res = CANOPEN_ERROR;
 
-
-CANopen_Status canopen_config_filter_list_16b(CANopen *canopen, uint16_t id1, uint16_t id2, uint16_t id3, uint16_t id4, uint8_t fifo)
-{
-  if (canopen->bank_count >= MAX_BANK_COUNT)
-  {
-    canopen->status = NO_BANK;
-    return canopen->status;
-  }
+  if (canopen == NULL)
+    return res;
+    
+  if (is_valid_id(canopen, id) != CANOPEN_OK)
+    return res;
   
+  if (is_valid_fifo(canopen, fifo) != CANOPEN_OK)
+    return res;
+
+  uint8_t i = 0;
+
+  for (i; i < MAX_BANK_COUNT; i++) 
+  {
+    if ((canopen->bank_list[i].fifo_assignment == fifo && 
+        canopen->bank_list[i].used_count < IDS_PER_BANK) ||
+        canopen->bank_list[i].used_count == 0)
+    {
+      canopen->bank_list[i].ids[canopen->bank_list[i].used_count] = id << 5;
+      canopen->bank_list[i].fifo_assignment = fifo;
+      canopen->bank_list[i].used_count++;
+      canopen->bank_count++; // банк каунт при каждом добавлении id ((()))
+      break;
+    }
+  }
+
+  if (i == MAX_BANK_COUNT)
+  {
+    canopen->status.bit.filter_banks_full = 1;
+    return CANOPEN_ERROR;
+  }
+
   CANopenFilterConfig filter = {0};
-  filter.bank      = canopen->bank_count++;
-  filter.mode      = COB_FILTERMODE_IDLIST;
-  filter.scale     = COB_FILTERSCALE_16BIT;
-  filter.id_high   = id1 << 5;
-  filter.id_low    = id2 << 5;
-  filter.mask_high = id3 << 5;
-  filter.mask_low  = id4 << 5;
-  filter.fifo      = fifo;
-  filter.active    = 1;  
-  filter.end_bank  = MAX_BANK_COUNT; // TODO Не реализовано по дефолту 14
+  filter.mode = COB_FILTERMODE_IDLIST;
+  filter.scale = COB_FILTERSCALE_16BIT;
+  filter.id_high = canopen->bank_list[i].ids[0];
+  filter.id_low = (canopen->bank_list[i].used_count > 1) ? canopen->bank_list[i].ids[1] : 0;
+  filter.mask_high = (canopen->bank_list[i].used_count > 2) ? canopen->bank_list[i].ids[2] : 0;
+  filter.mask_low = (canopen->bank_list[i].used_count > 3) ? canopen->bank_list[i].ids[3] : 0;
+  filter.fifo = fifo;
+  filter.active = 1;
+  filter.end_bank = MAX_BANK_COUNT;
   can_conf_filter(&filter);
-  canopen->status = OK;
-  return canopen->status;
+  return CANOPEN_OK;
 }
 
 // void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo)
@@ -61,56 +89,132 @@ CANopen_Status canopen_config_filter_list_16b(CANopen *canopen, uint16_t id1, ui
 //   can_conf_filter(&filter);
 // }
 
-
 void canopen_send_pdo(CANopen_PDO *pdo)
 {
   can_send_packet(pdo->id, COB_RTR_DATA, pdo->ide, pdo->dlс, pdo->data);
 }
 
-void CANopen_send_sdo(CANopen *canopen, CANopen_SDO *sdo)
+// void CANopen_send_sdo(CANopen *canopen, CANopen_SDO *sdo)
+// {
+//   can_send_packet(sdo->id, COB_RTR_DATA, canopen->ide, COB_SIZE_DEF, sdo->data);
+// }
+
+
+CANopen_State canopen_config_sdo_tx(CANopen *canopen, uint32_t id, CANopen_SDO *sdo)
 {
-  can_send_packet(sdo->id, COB_RTR_DATA, canopen->ide, COB_SIZE_DEF, sdo->data);
+  CANopen_State res = CANOPEN_ERROR;
+
+  if (sdo == NULL || canopen == NULL)
+    return res;
+  
+  if (is_valid_id(canopen, id) != CANOPEN_OK)
+    return res;
+
+  sdo->id = id;
+  sdo->ide = canopen->ide;
+  memset(&sdo->data, 0, sizeof(sdo->data));
+
+  res = CANOPEN_OK;
+  return res;
 }
 
-#define MAX_CALLBACKS 10
-static CAN_Handler pdo_rxcallbacks[MAX_CALLBACKS] = {0};
-static uint8_t callback_count = 0;
 
-CANopen_Status canopen_register_pdo_rx_callback(CANopen *canopen, uint32_t id, canopen_pdo_rxcallback callback)
+CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *pdo, uint32_t dlc)
 {
-  if(callback_count >= MAX_CALLBACKS)
-    return NO_CALLBACK;
+  CANopen_State res = CANOPEN_ERROR;
+
+  if (pdo == NULL || canopen == NULL)
+    return res;
+  
+  if (is_valid_id(canopen, id) != CANOPEN_OK)
+    return res;
+    
+  pdo->id = id;
+  pdo->dlс = dlc;
+  pdo->ide = canopen->ide;
+  memset(pdo->data, 0, sizeof(pdo->data));
+
+  res = CANOPEN_OK;
+  return res;
+}
+
+CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, canopen_callback callback)
+{
+  CANopen_State res = CANOPEN_ERROR;
+
+  if(canopen->callbacks_count >= MAX_CALLBACKS)
+    return res;
 
   /* Проверка, зарегистрирована ли PDO */
-  for (uint8_t i = 0; i < callback_count; i++)
+  for (uint8_t i = 0; i < canopen->callbacks_count; i++)
   {
-    if (pdo_rxcallbacks[i].id == id)
+    if (canopen->callbacks[i].id == id)
     {
-      pdo_rxcallbacks[i].callback = callback;
-      return OK; // TODO Другой статус
+      canopen->callbacks[i].callback = callback;
+      return res; // TODO Другой статус
     }
   }
 
   /* Добавить новый обработчик */
-  pdo_rxcallbacks[callback_count].id = id;
-  pdo_rxcallbacks[callback_count].callback = callback;
-  callback_count++;
+  canopen->callbacks[canopen->callbacks_count].id = id;
+  canopen->callbacks[canopen->callbacks_count].callback = callback;
+  canopen->callbacks_count++;
 
   /* Настройка фильтра для приема */
-  canopen_config_filter_list_16b(canopen, id, 0, 0, 0, 0);
-  return OK;
+  canopen_config_filter_list_16b(canopen, id, COB_RX_FIFO0); // TODO Пользовательская вещь?
+
+  res = CANOPEN_OK;
+  return res;
 }
 
-void canopen_process_rx_message(uint32_t id, uint8_t *data, uint8_t dlc)
+void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc)
 {
-  for (uint8_t i = 0; i < callback_count; i++)
+  for (uint8_t i = 0; i < canopen->callbacks_count; i++)
   {
-    if ((pdo_rxcallbacks[i].id == id) && (pdo_rxcallbacks[i].callback != NULL))
+    if ((canopen->callbacks[i].id == id) && (canopen->callbacks[i].callback != NULL))
     {
-      pdo_rxcallbacks->callback(id, data, dlc);
+      canopen->callbacks[i].callback(id, data, dlc);
       return;
     }
   }
 }
 
+static CANopen_State is_valid_id(CANopen *canopen, uint16_t id)
+{
+  CANopen_State res = CANOPEN_OK;
+
+  if ((canopen->ide == COB_ID_STD) && (id >= MAX_11BIT_ID))
+  {
+    canopen->status.bit.invalid_id = 1;
+    res = CANOPEN_ERROR;
+  }
+
+  return res;
+}
+
+static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo)
+{
+  CANopen_State res = CANOPEN_OK;
+
+  if ((fifo != COB_RX_FIFO0) && ((fifo != COB_RX_FIFO1)))
+  {
+    canopen->status.bit.invalid_fifo = 1;
+    res = CANOPEN_ERROR;
+  }
+  
+  return res;
+}
+
+// static CANopen_State is_valid_bank(CANopen *canopen)
+// {
+//   CANopen_State res = CANOPEN_OK;
+
+//   if (canopen->bank_count >= MAX_BANK_COUNT)
+//   {
+//     canopen->status.bit.filter_banks_full = 1;
+//     res = CANOPEN_ERROR;
+//   }
+
+//   return res;
+// }
 
