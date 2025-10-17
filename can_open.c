@@ -4,7 +4,8 @@
 
 static CANopen_State is_valid_id(CANopen *canopen, uint16_t id);
 static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo);
-static CANopen_State is_valid_bank(CANopen *canopen);
+static CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank);
+static uint8_t find_free_bank(CANopen *canopen, uint16_t id, uint8_t fifo);
 
 void canopen_init(CANopen *canopen, uint32_t ide)
 {
@@ -15,11 +16,15 @@ void canopen_init(CANopen *canopen, uint32_t ide)
   canopen->bank_count = 0;
   canopen->status.all = 0;
   canopen->callbacks_count = 0;
+  
   for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
   {
-    canopen->callbacks->id = 0;
-    canopen->callbacks->callback = NULL;
+    canopen->callbacks[i].id = 0;
+    canopen->callbacks[i].callback = NULL;
   }
+
+  for (uint8_t i = 0; i < MAX_BANK_COUNT; i++)
+    canopen->bank_list[i].fifo_assignment = 0xFF;
 
   can_init();
 }
@@ -38,40 +43,46 @@ CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint
   if (is_valid_fifo(canopen, fifo) != CANOPEN_OK)
     return res;
 
-  uint8_t i = 0;
+  uint8_t bank_num = find_free_bank(canopen, id, fifo);
+  
+  if (is_valid_bank(canopen, bank_num) != CANOPEN_OK)
+    return res;
 
-  for (i; i < MAX_BANK_COUNT; i++) 
+  CANopenFilterConfig filter = {0};
+  filter.bank      =  bank_num;
+  filter.mode      =  COB_FILTERMODE_IDLIST;
+  filter.scale     =  COB_FILTERSCALE_16BIT;
+  filter.id_high   =  canopen->bank_list[bank_num].ids[0];
+  filter.id_low    = (canopen->bank_list[bank_num].used_count > 1) ? canopen->bank_list[bank_num].ids[1] : 0;
+  filter.mask_high = (canopen->bank_list[bank_num].used_count > 2) ? canopen->bank_list[bank_num].ids[2] : 0;
+  filter.mask_low  = (canopen->bank_list[bank_num].used_count > 3) ? canopen->bank_list[bank_num].ids[3] : 0;
+  filter.fifo      = fifo;
+  filter.active    = 1;
+  filter.end_bank  = MAX_BANK_COUNT;
+  can_conf_filter(&filter);
+  return CANOPEN_OK;
+}
+
+
+static uint8_t find_free_bank(CANopen *canopen, uint16_t id, uint8_t fifo) 
+{
+  uint8_t bank_num = 0xFF;
+  for (uint8_t i = 0; i < MAX_BANK_COUNT; i++) 
   {
     if ((canopen->bank_list[i].fifo_assignment == fifo && 
         canopen->bank_list[i].used_count < IDS_PER_BANK) ||
         canopen->bank_list[i].used_count == 0)
     {
-      canopen->bank_list[i].ids[canopen->bank_list[i].used_count] = id << 5;
+      if (canopen->bank_list[i].fifo_assignment == 0xFF)
+        canopen->bank_count++;
       canopen->bank_list[i].fifo_assignment = fifo;
+      canopen->bank_list[i].ids[canopen->bank_list[i].used_count] = id << 5;
       canopen->bank_list[i].used_count++;
-      canopen->bank_count++; // банк каунт при каждом добавлении id ((()))
+      bank_num = i;
       break;
     }
   }
-
-  if (i == MAX_BANK_COUNT)
-  {
-    canopen->status.bit.filter_banks_full = 1;
-    return CANOPEN_ERROR;
-  }
-
-  CANopenFilterConfig filter = {0};
-  filter.mode = COB_FILTERMODE_IDLIST;
-  filter.scale = COB_FILTERSCALE_16BIT;
-  filter.id_high = canopen->bank_list[i].ids[0];
-  filter.id_low = (canopen->bank_list[i].used_count > 1) ? canopen->bank_list[i].ids[1] : 0;
-  filter.mask_high = (canopen->bank_list[i].used_count > 2) ? canopen->bank_list[i].ids[2] : 0;
-  filter.mask_low = (canopen->bank_list[i].used_count > 3) ? canopen->bank_list[i].ids[3] : 0;
-  filter.fifo = fifo;
-  filter.active = 1;
-  filter.end_bank = MAX_BANK_COUNT;
-  can_conf_filter(&filter);
-  return CANOPEN_OK;
+  return bank_num; 
 }
 
 // void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo)
@@ -138,7 +149,7 @@ CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *
   return res;
 }
 
-CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, canopen_callback callback)
+CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback)
 {
   CANopen_State res = CANOPEN_ERROR;
 
@@ -161,7 +172,7 @@ CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, canopen_cal
   canopen->callbacks_count++;
 
   /* Настройка фильтра для приема */
-  canopen_config_filter_list_16b(canopen, id, COB_RX_FIFO0); // TODO Пользовательская вещь?
+  canopen_config_filter_list_16b(canopen, id, fifo); // TODO Пользовательская вещь?
 
   res = CANOPEN_OK;
   return res;
@@ -205,16 +216,16 @@ static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo)
   return res;
 }
 
-// static CANopen_State is_valid_bank(CANopen *canopen)
-// {
-//   CANopen_State res = CANOPEN_OK;
+static CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank)
+{
+  CANopen_State res = CANOPEN_OK;
 
-//   if (canopen->bank_count >= MAX_BANK_COUNT)
-//   {
-//     canopen->status.bit.filter_banks_full = 1;
-//     res = CANOPEN_ERROR;
-//   }
+  if (bank == 0xFF)
+  {
+    canopen->status.bit.filter_banks_full = 1;
+    return CANOPEN_ERROR;
+  }
 
-//   return res;
-// }
+  return res;
+}
 
