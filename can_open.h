@@ -2,6 +2,7 @@
 #define CAN_OPEN_H
 
 #include "stdint.h"
+#include "fifo.h"
 
 #define COB_SIZE_DEF            8
 #define COB_SIZE_PDO COB_SIZE_DEF // communication object
@@ -10,6 +11,7 @@
 #define IDS_PER_BANK            4
 #define MAX_CALLBACKS           10
 #define MAX_11BIT_ID            0x7FF
+#define CAN_FIFO_SIZE           32 
 
 typedef void (*canopen_callback)(uint32_t id, uint8_t *data, uint8_t dlc);
 
@@ -62,7 +64,8 @@ typedef union
     uint16_t invalid_id : 1;
     uint16_t invalid_dlc : 1;
     uint16_t invalid_fifo : 1;
-    uint16_t reserv : 10;
+    uint16_t fifo_tx_full : 1;
+    uint16_t reserv : 9;
   } bit;
 }CANopenStatus;
 
@@ -70,7 +73,7 @@ typedef struct
 {
   uint32_t id;
   uint32_t ide;
-  uint8_t  dlс;
+  uint8_t  dlc;
   uint8_t  data[COB_SIZE_PDO];
 } CANopen_PDO;
 
@@ -96,13 +99,24 @@ typedef struct {
 } FilterBank;
 
 typedef struct {
-  uint32_t ide; // CAN_identifier_type
-  uint32_t tx_mailbox;
-  FilterBank bank_list[MAX_BANK_COUNT];
   uint8_t bank_count;
-  CANopenStatus status;
-  CAN_Handler callbacks[MAX_CALLBACKS];
   uint8_t callbacks_count;
+  uint32_t tx_mailbox;
+  CANopenStatus status;
+  uint32_t tx_pdo_count;
+  uint32_t tx_pdo_lost_count;
+  uint32_t tx_fifo_full_errors;
+} CANopenInfo;
+
+typedef struct {
+  uint32_t ide;
+  FilterBank bank_list[MAX_BANK_COUNT];
+  CANopenInfo info;
+  CAN_Handler callbacks[MAX_CALLBACKS];
+  CAN_Message tx_buff[CAN_FIFO_SIZE];
+  CAN_Message rx_buff[CAN_FIFO_SIZE];
+  CAN_FIFO    tx_FIFO;
+  CAN_FIFO    rx_FIFO;
 } CANopen;
 
 void canopen_init(CANopen *canopen, uint32_t ide);

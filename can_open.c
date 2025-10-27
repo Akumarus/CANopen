@@ -13,9 +13,9 @@ void canopen_init(CANopen *canopen, uint32_t ide)
     return;
 
   canopen->ide = ide;
-  canopen->bank_count = 0;
-  canopen->status.all = 0;
-  canopen->callbacks_count = 0;
+  canopen->info.bank_count = 0;
+  canopen->info.status.all = 0;
+  canopen->info.callbacks_count = 0;
   
   for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
   {
@@ -25,6 +25,11 @@ void canopen_init(CANopen *canopen, uint32_t ide)
 
   for (uint8_t i = 0; i < MAX_BANK_COUNT; i++)
     canopen->bank_list[i].fifo_assignment = 0xFF;
+
+  CAN_FIFO_config tx_fifo_cnfg = {.message = canopen->tx_buff, .size = CAN_FIFO_SIZE};
+  CAN_FIFO_config rx_fifo_cnfg = {.message = canopen->rx_buff, .size = CAN_FIFO_SIZE};
+  CAN_FIFO_init(&canopen->tx_FIFO, tx_fifo_cnfg);
+  CAN_FIFO_init(&canopen->rx_FIFO, rx_fifo_cnfg);
 
   can_init();
 }
@@ -74,7 +79,7 @@ static uint8_t find_free_bank(CANopen *canopen, uint16_t id, uint8_t fifo)
         canopen->bank_list[i].used_count == 0)
     {
       if (canopen->bank_list[i].fifo_assignment == 0xFF)
-        canopen->bank_count++;
+        canopen->info.bank_count++;
       canopen->bank_list[i].fifo_assignment = fifo;
       canopen->bank_list[i].ids[canopen->bank_list[i].used_count] = id << 5;
       canopen->bank_list[i].used_count++;
@@ -100,9 +105,26 @@ static uint8_t find_free_bank(CANopen *canopen, uint16_t id, uint8_t fifo)
 //   can_conf_filter(&filter);
 // }
 
-void canopen_send_pdo(CANopen_PDO *pdo)
+void canopen_process_TX(CANopen *canopen, CANopen_PDO *pdo) 
 {
-  can_send_packet(pdo->id, COB_RTR_DATA, pdo->ide, pdo->dlс, pdo->data);
+  if (CAN_FIFO_is_empty(&canopen->tx_FIFO))
+    return;
+
+  can_send_packet(pdo->id, COB_RTR_DATA, pdo->ide, pdo->dlc, pdo->data);
+
+}
+
+void canopen_send_pdo(CANopen *canopen, CANopen_PDO *pdo)
+{
+  if (canopen == NULL || pdo == NULL)
+    return;
+  
+  FIFO_CAN_State fifo_state;
+  fifo_state = CAN_FIFO_push(&canopen->tx_FIFO, COB_RTR_DATA, pdo->data, pdo->dlc);
+  canopen->info.tx_pdo_count++;
+  if (fifo_state == FIFO_CAN_FULL)
+    canopen->info.tx_pdo_lost_count++;
+  return fifo_state;
 }
 
 // void CANopen_send_sdo(CANopen *canopen, CANopen_SDO *sdo)
@@ -141,7 +163,7 @@ CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *
     return res;
     
   pdo->id = id;
-  pdo->dlс = dlc;
+  pdo->dlc = dlc;
   pdo->ide = canopen->ide;
   memset(pdo->data, 0, sizeof(pdo->data));
 
@@ -153,11 +175,11 @@ CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fif
 {
   CANopen_State res = CANOPEN_ERROR;
 
-  if(canopen->callbacks_count >= MAX_CALLBACKS)
+  if(canopen->info.callbacks_count >= MAX_CALLBACKS)
     return res;
 
   /* Проверка, зарегистрирована ли PDO */
-  for (uint8_t i = 0; i < canopen->callbacks_count; i++)
+  for (uint8_t i = 0; i < canopen->info.callbacks_count; i++)
   {
     if (canopen->callbacks[i].id == id)
     {
@@ -167,9 +189,9 @@ CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fif
   }
 
   /* Добавить новый обработчик */
-  canopen->callbacks[canopen->callbacks_count].id = id;
-  canopen->callbacks[canopen->callbacks_count].callback = callback;
-  canopen->callbacks_count++;
+  canopen->callbacks[canopen->info.callbacks_count].id = id;
+  canopen->callbacks[canopen->info.callbacks_count].callback = callback;
+  canopen->info.callbacks_count++;
 
   /* Настройка фильтра для приема */
   canopen_config_filter_list_16b(canopen, id, fifo); // TODO Пользовательская вещь?
@@ -180,7 +202,7 @@ CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fif
 
 void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc)
 {
-  for (uint8_t i = 0; i < canopen->callbacks_count; i++)
+  for (uint8_t i = 0; i < canopen->info.callbacks_count; i++)
   {
     if ((canopen->callbacks[i].id == id) && (canopen->callbacks[i].callback != NULL))
     {
@@ -196,7 +218,7 @@ static CANopen_State is_valid_id(CANopen *canopen, uint16_t id)
 
   if ((canopen->ide == COB_ID_STD) && (id >= MAX_11BIT_ID))
   {
-    canopen->status.bit.invalid_id = 1;
+    canopen->info.status.bit.invalid_id = 1;
     res = CANOPEN_ERROR;
   }
 
@@ -209,7 +231,7 @@ static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo)
 
   if ((fifo != COB_RX_FIFO0) && ((fifo != COB_RX_FIFO1)))
   {
-    canopen->status.bit.invalid_fifo = 1;
+    canopen->info.status.bit.invalid_fifo = 1;
     res = CANOPEN_ERROR;
   }
   
@@ -222,7 +244,7 @@ static CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank)
 
   if (bank == 0xFF)
   {
-    canopen->status.bit.filter_banks_full = 1;
+    canopen->info.status.bit.filter_banks_full = 1;
     return CANOPEN_ERROR;
   }
 

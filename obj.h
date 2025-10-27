@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
-// #include <string.h>
+#include <string.h>
+#include <stdbool.h>
 
 typedef enum {
   OD_TYPE_BOOL    = 0x00,
@@ -23,14 +24,32 @@ typedef enum {
   OD_WR = 0x02,
 } od_access_type_t;
 
+typedef union {
+  int8_t   i8;
+  int16_t  i16;
+  int32_t  i32;
+  uint8_t  u8;
+  uint16_t u16;
+  uint32_t u32;
+  float    f32;
+} od_limit_type_t;
+
 typedef struct {
+  const char* name;
   uint16_t index;
   uint8_t sub_index;
   od_data_type_t data_type;
   od_access_type_t access;
   void* data_ptr;
   uint32_t data_size;
-  const char* name;
+  od_limit_type_t min_value;
+  od_limit_type_t max_value;
+  bool has_limits;
 } od_type;
+
+uint32_t object_dictionary_read(uint16_t index, uint8_t sub_index, void* data, uint32_t size);
+uint32_t object_dictionary_write(uint16_t index, uint8_t sub_index, void* data, uint32_t size);
+uint32_t object_dictionary_get_size(uint16_t index, uint8_t sub_index);
+uint16_t object_dictionary_get_count(void);
 
 #endif // OBJ_H

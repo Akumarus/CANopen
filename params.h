@@ -25,11 +25,14 @@ typedef struct {
 device_data_t device_data;
 
 od_type object_dictionary[3] = {
-  {0x1000, 0x00, OD_TYPE_UINT32, OD_RO, &device_data.error_register,   4, "Error register"   },
-  {0x1001, 0x00, OD_TYPE_INT8,   OD_RO, &device_data.error_history[0], 1, "Error history[0]" },
-  {0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name,     32, "Device Name"      }
+/* --------------------------------------------------------------------------------------------------------------------------------------- */
+/* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer          | Size | Min |     Max            | Lim |*/
+/* --------------------------------------------------------------------------------------------------------------------------------------- */
+  {"Error register  ", 0x1000,    0x00,     OD_TYPE_UINT32,   OD_RO, &device_data.error_register,     4,   {0}, {.u32 = 0xFFFFFFFF}, true },
+  {"Error history[0]", 0x1001,    0x00,     OD_TYPE_INT8,     OD_RO, &device_data.error_history[0],   1,   {0}, {.i8 = 127},         true },
+  {"Device Name     ", 0x1008,    0x00,     OD_TYPE_STRING,   OD_RO, &device_data.device_name,       32,   {0}, {0},                 false}
 };
 
-#define OBJECT_DICTIONARY_SIZE (sizeof(object_dictionary) / sizeof(od_type) - 1);
+#define OBJECT_DICTIONARY_SIZE (sizeof(object_dictionary) / sizeof(od_type));
 
 #endif // PARAMS_H
