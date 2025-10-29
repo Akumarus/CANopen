@@ -41,10 +41,8 @@ typedef struct {
   od_data_type_t data_type;
   od_access_type_t access;
   void* data_ptr;
-  uint32_t data_size;
   od_limit_type_t min_value;
   od_limit_type_t max_value;
-  bool has_limits;
 } od_type;
 
 uint32_t object_dictionary_read(uint16_t index, uint8_t sub_index, void* data, uint32_t size);

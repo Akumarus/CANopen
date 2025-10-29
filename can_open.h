@@ -1,7 +1,7 @@
 #ifndef CAN_OPEN_H
 #define CAN_OPEN_H
 
-#include "stdint.h"
+#include <stdint.h>
 #include "fifo.h"
 
 #define COB_SIZE_DEF            8
@@ -72,7 +72,6 @@ typedef union
 typedef struct 
 {
   uint32_t id;
-  uint32_t ide;
   uint8_t  dlc;
   uint8_t  data[COB_SIZE_PDO];
 } CANopen_PDO;
@@ -80,7 +79,6 @@ typedef struct
 typedef struct 
 {
   uint32_t id;
-  uint32_t ide;
   uint8_t  cmd;
   uint16_t index;
   uint8_t  sub_index;
@@ -103,6 +101,7 @@ typedef struct {
   uint8_t callbacks_count;
   uint32_t tx_mailbox;
   CANopenStatus status;
+  uint32_t tx_sended_pdo_count;
   uint32_t tx_pdo_count;
   uint32_t tx_pdo_lost_count;
   uint32_t tx_fifo_full_errors;
@@ -115,8 +114,8 @@ typedef struct {
   CAN_Handler callbacks[MAX_CALLBACKS];
   CAN_Message tx_buff[CAN_FIFO_SIZE];
   CAN_Message rx_buff[CAN_FIFO_SIZE];
-  CAN_FIFO    tx_FIFO;
-  CAN_FIFO    rx_FIFO;
+  CAN_FIFO    tx_fifo;
+  CAN_FIFO    rx_fifo;
 } CANopen;
 
 void canopen_init(CANopen *canopen, uint32_t ide);
@@ -125,10 +124,10 @@ CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint
 
 CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
 CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *pdo, uint32_t dlc);
-
+FIFO_CAN_State canopen_send_pdo(CANopen *canopen, CANopen_PDO *pdo);
 void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc);
+void canopen_process_tx(CANopen *canopen);
 
-void canopen_send_pdo();
 void canopen_send_sdo();
 void canopen_read_pdo();
 void canopen_read_sdo();

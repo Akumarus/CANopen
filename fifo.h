@@ -5,6 +5,12 @@
 
 #define FIFO_DATA_MAX_SIZE 8
 
+typedef enum
+{
+  TYPE_NONE = 0,
+  TYPE_SDO,
+  TYPE_PDO,
+} FIFO_CAN_type;
 
 typedef enum
 {
@@ -18,6 +24,7 @@ typedef struct {
   uint32_t id;
   uint8_t  data[FIFO_DATA_MAX_SIZE];
   uint8_t  dlc;
+  uint8_t  type;
 } CAN_Message;
 
 typedef struct {
@@ -34,11 +41,11 @@ typedef struct {
   uint32_t lost_messages_count;
 } CAN_FIFO;
 
-FIFO_CAN_State CAN_FIFO_init(CAN_FIFO *fifo, CAN_FIFO_config cnfg);
-FIFO_CAN_State CAN_FIFO_push(CAN_FIFO *fifo, uint32_t id, uint8_t *data, uint8_t dlc);
-FIFO_CAN_State CAN_FIFO_pop(CAN_FIFO *fifo, CAN_Message *msg);
-uint16_t CAN_FIFO_is_empty(CAN_FIFO *fifo);
-uint16_t CAN_FIFO_is_full(CAN_FIFO *fifo);
-uint16_t CAN_FIFO_get_lost_count(CAN_FIFO *fifo);
+FIFO_CAN_State can_fifo_init(CAN_FIFO *fifo, CAN_FIFO_config cnfg);
+FIFO_CAN_State can_fifo_push(CAN_FIFO *fifo, uint32_t id, uint8_t *data, uint8_t dlc, uint8_t msg_type);
+FIFO_CAN_State can_fifo_pop(CAN_FIFO *fifo, CAN_Message *msg);
+uint16_t can_fifo_is_empty(CAN_FIFO *fifo);
+uint16_t can_fifo_is_full(CAN_FIFO *fifo);
+uint16_t can_fifo_get_lost_count(CAN_FIFO *fifo);
 
 #endif //FIFO_CAN_H

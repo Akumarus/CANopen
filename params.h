@@ -25,14 +25,14 @@ typedef struct {
 device_data_t device_data;
 
 od_type object_dictionary[3] = {
-/* --------------------------------------------------------------------------------------------------------------------------------------- */
-/* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer          | Size | Min |     Max            | Lim |*/
-/* --------------------------------------------------------------------------------------------------------------------------------------- */
-  {"Error register  ", 0x1000,    0x00,     OD_TYPE_UINT32,   OD_RO, &device_data.error_register,     4,   {0}, {.u32 = 0xFFFFFFFF}, true },
-  {"Error history[0]", 0x1001,    0x00,     OD_TYPE_INT8,     OD_RO, &device_data.error_history[0],   1,   {0}, {.i8 = 127},         true },
-  {"Device Name     ", 0x1008,    0x00,     OD_TYPE_STRING,   OD_RO, &device_data.device_name,       32,   {0}, {0},                 false}
+/* -------------------------------------------------------------------------------------------------------------------------- */
+/* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer           | Min |        Max        |*/
+/* -------------------------------------------------------------------------------------------------------------------------- */
+  {"Error register  ", 0x1000,    0x00,     OD_TYPE_UINT32,   OD_RO, &device_data.error_register,    {0}, {.u32 = 0xFFFFFFFF}},
+  {"Error history[0]", 0x1001,    0x00,     OD_TYPE_INT8,     OD_RO, &device_data.error_history[0],  {0}, {.i8 = 127}        },
+  {"Device Name     ", 0x1008,    0x00,     OD_TYPE_STRING,   OD_RO, &device_data.device_name,       {0}, {0}                }
 };
 
-#define OBJECT_DICTIONARY_SIZE (sizeof(object_dictionary) / sizeof(od_type));
+#define OBJECT_DICTIONARY_SIZE (sizeof(object_dictionary) / sizeof(od_type))
 
 #endif // PARAMS_H

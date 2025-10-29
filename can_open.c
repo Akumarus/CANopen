@@ -28,8 +28,8 @@ void canopen_init(CANopen *canopen, uint32_t ide)
 
   CAN_FIFO_config tx_fifo_cnfg = {.message = canopen->tx_buff, .size = CAN_FIFO_SIZE};
   CAN_FIFO_config rx_fifo_cnfg = {.message = canopen->rx_buff, .size = CAN_FIFO_SIZE};
-  CAN_FIFO_init(&canopen->tx_FIFO, tx_fifo_cnfg);
-  CAN_FIFO_init(&canopen->rx_FIFO, rx_fifo_cnfg);
+  can_fifo_init(&canopen->tx_fifo, tx_fifo_cnfg);
+  can_fifo_init(&canopen->rx_fifo, rx_fifo_cnfg);
 
   can_init();
 }
@@ -105,22 +105,27 @@ static uint8_t find_free_bank(CANopen *canopen, uint16_t id, uint8_t fifo)
 //   can_conf_filter(&filter);
 // }
 
-void canopen_process_TX(CANopen *canopen, CANopen_PDO *pdo) 
+void canopen_process_tx(CANopen *canopen) 
 {
-  if (CAN_FIFO_is_empty(&canopen->tx_FIFO))
+  if (can_fifo_is_empty(&canopen->tx_fifo))
     return;
 
-  can_send_packet(pdo->id, COB_RTR_DATA, pdo->ide, pdo->dlc, pdo->data);
-
+  CAN_Message frame = {0};
+  if (can_fifo_pop(&canopen->tx_fifo, &frame) == FIFO_CAN_OK)
+  {
+    can_send_packet(frame.id, COB_RTR_DATA, canopen->ide, frame.dlc, frame.data);
+    if (frame.type == TYPE_PDO)
+      canopen->info.tx_sended_pdo_count++;
+  }
 }
 
-void canopen_send_pdo(CANopen *canopen, CANopen_PDO *pdo)
+FIFO_CAN_State canopen_send_pdo(CANopen *canopen, CANopen_PDO *pdo)
 {
   if (canopen == NULL || pdo == NULL)
-    return;
+    return FIFO_CAN_ERROR;
   
   FIFO_CAN_State fifo_state;
-  fifo_state = CAN_FIFO_push(&canopen->tx_FIFO, COB_RTR_DATA, pdo->data, pdo->dlc);
+  fifo_state = can_fifo_push(&canopen->tx_fifo, pdo->id, pdo->data, pdo->dlc, TYPE_PDO);
   canopen->info.tx_pdo_count++;
   if (fifo_state == FIFO_CAN_FULL)
     canopen->info.tx_pdo_lost_count++;
@@ -144,7 +149,7 @@ CANopen_State canopen_config_sdo_tx(CANopen *canopen, uint32_t id, CANopen_SDO *
     return res;
 
   sdo->id = id;
-  sdo->ide = canopen->ide;
+  //sdo->ide = canopen->ide;
   memset(&sdo->data, 0, sizeof(sdo->data));
 
   res = CANOPEN_OK;
@@ -164,7 +169,6 @@ CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *
     
   pdo->id = id;
   pdo->dlc = dlc;
-  pdo->ide = canopen->ide;
   memset(pdo->data, 0, sizeof(pdo->data));
 
   res = CANOPEN_OK;
