@@ -2,9 +2,7 @@
 #include "port.h"
 #include <string.h>
 
-static CANopen_State is_valid_id(CANopen *canopen, uint16_t id);
-static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo);
-static CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank);
+
 static uint8_t find_free_bank(CANopen *canopen, uint16_t id, uint8_t fifo);
 
 void canopen_init(CANopen *canopen, uint32_t ide)
@@ -110,27 +108,15 @@ void canopen_process_tx(CANopen *canopen)
   if (can_fifo_is_empty(&canopen->tx_fifo))
     return;
 
-  CAN_Message frame = {0};
+  canopen_message_t frame = {0};
   if (can_fifo_pop(&canopen->tx_fifo, &frame) == FIFO_CAN_OK)
   {
-    can_send_packet(frame.id, COB_RTR_DATA, canopen->ide, frame.dlc, frame.data);
+    can_send_packet(frame.id, COB_RTR_DATA, canopen->ide, frame.dlc, frame.frame.row.data);
     if (frame.type == TYPE_PDO)
       canopen->info.tx_sended_pdo_count++;
   }
 }
 
-FIFO_CAN_State canopen_send_pdo(CANopen *canopen, CANopen_PDO *pdo)
-{
-  if (canopen == NULL || pdo == NULL)
-    return FIFO_CAN_ERROR;
-  
-  FIFO_CAN_State fifo_state;
-  fifo_state = can_fifo_push(&canopen->tx_fifo, pdo->id, pdo->data, pdo->dlc, TYPE_PDO);
-  canopen->info.tx_pdo_count++;
-  if (fifo_state == FIFO_CAN_FULL)
-    canopen->info.tx_pdo_lost_count++;
-  return fifo_state;
-}
 
 // void CANopen_send_sdo(CANopen *canopen, CANopen_SDO *sdo)
 // {
@@ -138,42 +124,24 @@ FIFO_CAN_State canopen_send_pdo(CANopen *canopen, CANopen_PDO *pdo)
 // }
 
 
-CANopen_State canopen_config_sdo_tx(CANopen *canopen, uint32_t id, CANopen_SDO *sdo)
+CANopen_State canopen_config_sdo_tx(CANopen *canopen, uint32_t id, canopen_message_t *msg)
 {
   CANopen_State res = CANOPEN_ERROR;
 
-  if (sdo == NULL || canopen == NULL)
+  if (msg == NULL || canopen == NULL)
     return res;
   
   if (is_valid_id(canopen, id) != CANOPEN_OK)
     return res;
 
-  sdo->id = id;
-  //sdo->ide = canopen->ide;
-  memset(&sdo->data, 0, sizeof(sdo->data));
+  msg->id = id;
+  msg->dlc = 8;
+  memset(&msg->frame.sdo.data, 0, sizeof(cob_frame_t));
 
   res = CANOPEN_OK;
   return res;
 }
 
-
-CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *pdo, uint32_t dlc)
-{
-  CANopen_State res = CANOPEN_ERROR;
-
-  if (pdo == NULL || canopen == NULL)
-    return res;
-  
-  if (is_valid_id(canopen, id) != CANOPEN_OK)
-    return res;
-    
-  pdo->id = id;
-  pdo->dlc = dlc;
-  memset(pdo->data, 0, sizeof(pdo->data));
-
-  res = CANOPEN_OK;
-  return res;
-}
 
 CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback)
 {
@@ -216,7 +184,7 @@ void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, ui
   }
 }
 
-static CANopen_State is_valid_id(CANopen *canopen, uint16_t id)
+CANopen_State is_valid_id(CANopen *canopen, uint16_t id)
 {
   CANopen_State res = CANOPEN_OK;
 
@@ -229,7 +197,7 @@ static CANopen_State is_valid_id(CANopen *canopen, uint16_t id)
   return res;
 }
 
-static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo)
+CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo)
 {
   CANopen_State res = CANOPEN_OK;
 
@@ -242,7 +210,7 @@ static CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo)
   return res;
 }
 
-static CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank)
+CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank)
 {
   CANopen_State res = CANOPEN_OK;
 

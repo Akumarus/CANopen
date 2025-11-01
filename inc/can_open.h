@@ -1,17 +1,10 @@
 #ifndef CAN_OPEN_H
 #define CAN_OPEN_H
 
-#include <stdint.h>
+#include "def.h"
 #include "fifo.h"
 
-#define COB_SIZE_DEF            8
-#define COB_SIZE_PDO COB_SIZE_DEF // communication object
-#define COB_SIZE_SDO            4 // communication object
-#define MAX_BANK_COUNT          14
-#define IDS_PER_BANK            4
-#define MAX_CALLBACKS           10
-#define MAX_11BIT_ID            0x7FF
-#define CAN_FIFO_SIZE           32 
+
 
 typedef void (*canopen_callback)(uint32_t id, uint8_t *data, uint8_t dlc);
 
@@ -47,11 +40,9 @@ typedef enum
   COB_RTR_REMOTE = 0x00000002U  /*!< Remote frame */
 }Identifier_Type;
 
-typedef enum
-{
-  CANOPEN_OK = 0,
-  CANOPEN_ERROR,
-} CANopen_State;
+
+
+
 
 typedef union
 {
@@ -69,21 +60,8 @@ typedef union
   } bit;
 }CANopenStatus;
 
-typedef struct 
-{
-  uint32_t id;
-  uint8_t  dlc;
-  uint8_t  data[COB_SIZE_PDO];
-} CANopen_PDO;
 
-typedef struct 
-{
-  uint32_t id;
-  uint8_t  cmd;
-  uint16_t index;
-  uint8_t  sub_index;
-  uint32_t data;
-} CANopen_SDO;
+
 
 typedef struct {
   uint32_t id;
@@ -112,24 +90,24 @@ typedef struct {
   FilterBank bank_list[MAX_BANK_COUNT];
   CANopenInfo info;
   CAN_Handler callbacks[MAX_CALLBACKS];
-  CAN_Message tx_buff[CAN_FIFO_SIZE];
-  CAN_Message rx_buff[CAN_FIFO_SIZE];
+  canopen_message_t tx_buff[CAN_FIFO_SIZE];
+  canopen_message_t rx_buff[CAN_FIFO_SIZE];
   CAN_FIFO    tx_fifo;
   CAN_FIFO    rx_fifo;
 } CANopen;
 
 void canopen_init(CANopen *canopen, uint32_t ide);
-void canopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo);
+void canopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo); // TODO
 CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint8_t fifo);
 
 CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
-CANopen_State canopen_config_pdo_tx(CANopen *canopen, uint32_t id, CANopen_PDO *pdo, uint32_t dlc);
-FIFO_CAN_State canopen_send_pdo(CANopen *canopen, CANopen_PDO *pdo);
+
+
 void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc);
 void canopen_process_tx(CANopen *canopen);
 
-void canopen_send_sdo();
-void canopen_read_pdo();
-void canopen_read_sdo();
+CANopen_State is_valid_id(CANopen *canopen, uint16_t id);
+CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo);
+CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank);
 
 #endif // CAN_OPEN_H

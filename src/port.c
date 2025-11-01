@@ -2,7 +2,7 @@
 #include "can.h"
 
 uint32_t mailbox;
-uint32_t IT_can_mask = CAN_IT_RX_FIFO0_MSG_PENDING;
+uint32_t IT_can_mask = CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING;
 
 void can_init(void)
 {

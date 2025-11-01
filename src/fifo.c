@@ -13,9 +13,9 @@ FIFO_CAN_State can_fifo_init(CAN_FIFO *fifo, CAN_FIFO_config cnfg)
   return FIFO_CAN_OK;
 }
 
-FIFO_CAN_State can_fifo_push(CAN_FIFO *fifo, uint32_t id, uint8_t *data, uint8_t dlc, uint8_t msg_type)
+FIFO_CAN_State can_fifo_push(CAN_FIFO *fifo, canopen_message_t *msg)
 {
-  if (fifo == NULL || data == NULL || dlc > FIFO_DATA_MAX_SIZE)
+  if (fifo == NULL || msg == NULL)
     return FIFO_CAN_ERROR;
 
   if (fifo->count >= fifo->size) {
@@ -23,18 +23,14 @@ FIFO_CAN_State can_fifo_push(CAN_FIFO *fifo, uint32_t id, uint8_t *data, uint8_t
     return FIFO_CAN_FULL;
   }
   
-  fifo->message[fifo->head].id = id;
-  fifo->message[fifo->head].dlc = dlc;
-  fifo->message[fifo->head].type = msg_type;
-  memcpy(fifo->message[fifo->head].data, data, dlc);
-  
+  memcpy(&fifo->message[fifo->head], msg, sizeof(canopen_message_t));
   fifo->head = (fifo->head + 1) % fifo->size;
   fifo->count++;
   
   return FIFO_CAN_OK;
 }
 
-FIFO_CAN_State can_fifo_pop(CAN_FIFO *fifo, CAN_Message *msg)
+FIFO_CAN_State can_fifo_pop(CAN_FIFO *fifo, canopen_message_t *msg)
 {
   if (fifo == NULL || msg == NULL)
     return FIFO_CAN_ERROR;
@@ -43,7 +39,7 @@ FIFO_CAN_State can_fifo_pop(CAN_FIFO *fifo, CAN_Message *msg)
     return FIFO_CAN_EMPTY;
   }
 
-  memcpy(msg, &fifo->message[fifo->tail], sizeof(CAN_Message));
+  memcpy(msg, &fifo->message[fifo->tail], sizeof(canopen_message_t));
   fifo->tail = (fifo->tail + 1) % fifo->size;
   fifo->count--;
 
