@@ -43,7 +43,6 @@ FIFO_CAN_State can_fifo_pop(CAN_FIFO *fifo, CAN_Message *msg)
     return FIFO_CAN_EMPTY;
   }
 
-  // *msg = fifo->message[fifo->tail];
   memcpy(msg, &fifo->message[fifo->tail], sizeof(CAN_Message));
   fifo->tail = (fifo->tail + 1) % fifo->size;
   fifo->count--;
