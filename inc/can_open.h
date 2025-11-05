@@ -40,10 +40,6 @@ typedef enum
   COB_RTR_REMOTE = 0x00000002U  /*!< Remote frame */
 }Identifier_Type;
 
-
-
-
-
 typedef union
 {
   uint16_t all;
@@ -59,9 +55,6 @@ typedef union
     uint16_t reserv : 9;
   } bit;
 }CANopenStatus;
-
-
-
 
 typedef struct {
   uint32_t id;
@@ -83,6 +76,7 @@ typedef struct {
   uint32_t tx_pdo_count;
   uint32_t tx_pdo_lost_count;
   uint32_t tx_fifo_full_errors;
+  uint32_t tx_busy_mailbox_count;
 } CANopenInfo;
 
 typedef struct {
@@ -99,12 +93,10 @@ typedef struct {
 void canopen_init(CANopen *canopen, uint32_t ide);
 void canopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo); // TODO
 CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint8_t fifo);
-
 CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
 
-
 void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc);
-void canopen_process_tx(CANopen *canopen);
+void canopen_process_tx_message(CANopen *canopen);
 
 CANopen_State is_valid_id(CANopen *canopen, uint16_t id);
 CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo);

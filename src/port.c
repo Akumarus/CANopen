@@ -1,7 +1,7 @@
 #include "port.h"
 #include "can.h"
 
-uint32_t mailbox;
+uint32_t mailbox = 0;
 uint32_t IT_can_mask = CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING;
 
 void can_init(void)
@@ -47,3 +47,9 @@ void can_send_packet(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uin
   txHeader.TransmitGlobalTime = DISABLE; // TODO  Настроить режим
   HAL_CAN_AddTxMessage(&hcan, &txHeader, data, &mailbox);
 }
+
+uint32_t can_get_free_mailboxes(void)
+{
+  return HAL_CAN_GetTxMailboxesFreeLevel(&hcan);
+}
+

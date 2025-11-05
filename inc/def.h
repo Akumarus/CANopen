@@ -14,6 +14,26 @@
 #define MAX_11BIT_ID            0x7FF
 #define CAN_FIFO_SIZE           32 
 
+typedef enum {
+  NMT_BROADCAST   = 0x000,
+  SYNC_MESSAGE    = 0x080,
+  EMERGENCY_START = 0x080,
+  TIME_MESSAGE    = 0x100,
+  PDO1_TX         = 0x180,
+  PDO2_TX         = 0x280,
+  PDO3_TX         = 0x380,
+  PDO4_TX         = 0x480,
+  PDO1_RX         = 0x200,
+  PDO2_RX         = 0x300,
+  PDO3_RX         = 0x400,
+  PDO4_RX         = 0x500,
+  SDO_RX          = 0x580,
+  SDO_TX          = 0x600,
+  HEARTBIT_START  = 0x700,
+  LSS_TX          = 0x7E4, // TODO Посмотреть, что это
+  LSS_RX          = 0x7E5,
+}canopen_fc_t;
+
 typedef enum
 {
   TYPE_NONE = 0,

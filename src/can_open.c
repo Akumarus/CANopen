@@ -103,16 +103,22 @@ static uint8_t find_free_bank(CANopen *canopen, uint16_t id, uint8_t fifo)
 //   can_conf_filter(&filter);
 // }
 
-void canopen_process_tx(CANopen *canopen) 
+void canopen_process_tx_message(CANopen *canopen) 
 {
-  if (can_fifo_is_empty(&canopen->tx_fifo))
+  if (can_fifo_is_empty(&canopen->tx_fifo)) {
     return;
+  }
+  
+  if (can_get_free_mailboxes() == 0) {
+    canopen->info.tx_busy_mailbox_count++;
+    return;
+  }
 
-  canopen_message_t frame = {0};
-  if (can_fifo_pop(&canopen->tx_fifo, &frame) == FIFO_CAN_OK)
+  canopen_message_t msg = {0};
+  if (can_fifo_pop(&canopen->tx_fifo, &msg) == FIFO_CAN_OK)
   {
-    can_send_packet(frame.id, COB_RTR_DATA, canopen->ide, frame.dlc, frame.frame.row.data);
-    if (frame.type == TYPE_PDO)
+    can_send_packet(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row.data);
+    if (msg.type == TYPE_PDO)
       canopen->info.tx_sended_pdo_count++;
   }
 }
@@ -122,26 +128,6 @@ void canopen_process_tx(CANopen *canopen)
 // {
 //   can_send_packet(sdo->id, COB_RTR_DATA, canopen->ide, COB_SIZE_DEF, sdo->data);
 // }
-
-
-CANopen_State canopen_config_sdo_tx(CANopen *canopen, uint32_t id, canopen_message_t *msg)
-{
-  CANopen_State res = CANOPEN_ERROR;
-
-  if (msg == NULL || canopen == NULL)
-    return res;
-  
-  if (is_valid_id(canopen, id) != CANOPEN_OK)
-    return res;
-
-  msg->id = id;
-  msg->dlc = 8;
-  memset(&msg->frame.sdo.data, 0, sizeof(cob_frame_t));
-
-  res = CANOPEN_OK;
-  return res;
-}
-
 
 CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback)
 {
