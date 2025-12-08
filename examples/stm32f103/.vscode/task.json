@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "flash",
+      "type": "shell",
+      "command": "openocd",
+      "args": [
+        "-f", "openocd.cfg",
+        "-c", "program build/Debug/can_f103.elf verify reset exit"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "cmake.configureOnOpen": true,
+  "cmake.buildDirectory": "${workspaceFolder}/build/Debug",
+  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+  "C_Cpp.intelliSenseEngine": "default",
+  "C_Cpp.autocomplete": "default",
+  "files.associations": {
+    "stdint.h": "c",
+    "port.h": "c",
+    "can.h": "c",
+    "can_open.h": "c",
+    "assert.h": "c",
+    "fifo.h": "c",
+    "cstdlib": "c",
+    "obj.h": "c",
+    "system_error": "c",
+    "array": "c",
+    "string_view": "c",
+    "initializer_list": "c",
+    "string.h": "c",
+    "params.h": "c",
+    "stdbool.h": "c",
+    "string": "c",
+    "pdo.h": "c",
+    "def.h": "c",
+    "sdo.h": "c"
+  }
+}

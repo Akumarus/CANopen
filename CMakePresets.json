@@ -1,0 +1,16 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "stm32-example",
+      "displayName": "STM32 Example",
+      "generator": "Unix Makefiles",
+      "binaryDir": "${sourceDir}/build",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/cmake/gcc-arm-none-eabi.cmake",
+        "CMAKE_BUILD_TYPE": "Debug",
+        "STM32_CHIP": "STM32F103C8Tx"
+      }
+    }
+  ]
+}

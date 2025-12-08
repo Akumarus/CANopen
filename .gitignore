@@ -1,0 +1,19 @@
+# Основные папки сборки
+build/
+*/build/
+*/*/build/
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# Бинарники
+*.elf
+*.hex
+*.bin
+*.map
+
+# IDE
+.vscode/settings.local.json

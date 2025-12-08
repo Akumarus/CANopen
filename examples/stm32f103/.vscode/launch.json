@@ -1,0 +1,34 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug STM32F1",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/Debug/can_f103.elf",
+            "device": "STM32F103C8",
+            "configFiles": [
+                "interface/stlink.cfg",
+                "target/stm32f1x.cfg"
+            ],
+            "runToEntryPoint": "main",
+            "gdbPath": "gdb-multiarch",
+            "searchDir": [
+                "/usr/share/openocd/scripts"
+            ],
+            "openOCDLaunchCommands": [
+                "init",
+                "reset halt"
+            ],
+            "gdbServerPort": 3333,
+            "tclPort": 6667,
+            "telnetPort": 4444,
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 1
+            }
+        }
+    ]
+}
