@@ -4,8 +4,6 @@
 #include "def.h"
 #include "fifo.h"
 
-
-
 typedef void (*canopen_callback)(uint32_t id, uint8_t *data, uint8_t dlc);
 
 typedef enum
