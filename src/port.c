@@ -2,23 +2,19 @@
 #include "can.h"
 
 uint32_t mailbox = 0;
-uint32_t IT_can_mask = CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING;
+uint32_t it_mask = CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING;
 
 void can_init(void)
 {
   MX_CAN_Init();
-  HAL_CAN_Start(&hcan);
-  can_enable_IT(); // Активация прерываний
-}
+  /* 
+    TODO Почему-то на другой плате не сразу меняется регистр выхода
+    из режима инициализации.
 
-void can_enable_IT(void)
-{
-  HAL_CAN_ActivateNotification(&hcan, IT_can_mask);
-}
-
-void can_disable_IT(void)
-{
-  HAL_CAN_DeactivateNotification(&hcan, IT_can_mask);
+    HAL_CAN_Start(&hcan);
+  */ 
+  CLEAR_BIT(hcan.Instance->MCR, CAN_MCR_INRQ);
+  HAL_CAN_ActivateNotification(&hcan, it_mask);
 }
 
 void can_conf_filter(CANopenFilterConfig *filter)

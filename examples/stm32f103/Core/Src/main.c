@@ -29,6 +29,7 @@
 #include "pdo.h"
 #include "sdo.h"
 #include "fifo.h"
+#include "port.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -118,6 +119,10 @@ void pdo22_send()
     canopen_send_pdo(&canopen, &pdo2);
 }
 
+
+uint8_t data11[8] = {0};
+uint32_t mailbox1 = 0;
+CAN_TxHeaderTypeDef txHeader;
 /* USER CODE END 0 */
 
 /**
@@ -172,12 +177,28 @@ int main(void)
   /* USER CODE BEGIN 2 */
   canopen_init(&canopen, COB_ID_STD);
 
-  canopen_config_pdo_tx(&canopen, pdo1_id, &pdo1, 3);
-  canopen_config_pdo_tx(&canopen, pdo2_id, &pdo2, 3);
+  // canopen_config_pdo_tx(&canopen, pdo1_id, &pdo1, 3);
+  // canopen_config_pdo_tx(&canopen, pdo2_id, &pdo2, 3);
 
-  canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
-  canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
+  // canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
+  // canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
+  CAN_FilterTypeDef can_filter = {0};
+  can_filter.FilterBank = 0;
+  can_filter.FilterMode = CAN_FILTERMODE_IDMASK;
+  can_filter.FilterScale = CAN_FILTERSCALE_32BIT;
+  can_filter.FilterFIFOAssignment = CAN_RX_FIFO0;  // Явно указываем FIFO0
+  can_filter.FilterActivation = ENABLE;
+  can_filter.SlaveStartFilterBank = 0;
+  can_filter.FilterIdHigh = 0x0000;
+  can_filter.FilterIdLow = 0x0000;
+  can_filter.FilterMaskIdHigh = 0x0000;
+  can_filter.FilterMaskIdLow = 0x0000;
   
+  HAL_CAN_ConfigFilter(&hcan, &can_filter);
+// 3. Активация прерываний (опционально)
+// HAL_CAN_ActivateNotification(&hcan, CAN_IT_RX_FIFO0_MSG_PENDING);
+// HAL_CAN_Start(&hcan);
+
   // HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
 
@@ -185,7 +206,22 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    canopen_process_tx_message(&canopen);
+    // can_send_packet(pdo1_id, COB_RTR_DATA, COB_ID_STD, 3, pdo1.frame.pdo.data);
+    if(HAL_CAN_GetTxMailboxesFreeLevel(&hcan) > 0)
+    {
+        txHeader.StdId = pdo1_id;
+        txHeader.RTR = CAN_RTR_DATA;
+        txHeader.IDE = CAN_ID_STD;
+        txHeader.DLC = 8;
+        txHeader.TransmitGlobalTime = DISABLE;
+        
+        if(HAL_CAN_AddTxMessage(&hcan, &txHeader, data11, &mailbox1) != HAL_OK)
+        {
+            // Обработка ошибки отправки
+        }
+    }
+    
+    HAL_Delay(500);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
