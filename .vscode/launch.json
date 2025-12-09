@@ -2,11 +2,11 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug stm32f103",
+            "name": "Stlink debug stm32f103",
             "type": "cortex-debug",
             "request": "launch",
             "servertype": "openocd",
-            "executable": "${workspaceFolder}/examples/stm32f103/build/can_f103.elf",
+            "executable": "${workspaceFolder}/examples/stm32f103/build/Debug/can_f103.elf",
             "device": "STM32F103C8",
             "configFiles": [
                 "interface/stlink.cfg",
@@ -18,6 +18,23 @@
             "liveWatch": {
                 "enabled": true,
                 "samplesPerSecond": 1
+            }
+        },
+        {
+            "name": "Jlink debug stm32f103",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "jlink",
+            "serverpath": "JLinkGDBServer",
+            "executable": "${workspaceFolder}/examples/stm32f103/build/Debug/can_f103.elf",
+            "device": "STM32F103C8",
+            "interface": "swd",
+            "runToEntryPoint": "main",
+            "gdbPath": "gdb-multiarch",
+            "svdFile": "${workspaceFolder}/examples/stm32f103/STM32F103.svd",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 2
             }
         }
     ]

@@ -67,18 +67,18 @@ void sdo_server_process_request(CANopen *canopen, canopen_message_t *msg) {
   }
 }
 
-static void sdo_server_upload_request(CANopen *canopen, uint8_t, uint8_t nodeId, canopen_message_t *msg) {
-  uint16_t index = msg->frame.sdo.index;
-  uint8_t sub_index = msg->frame.sdo.index;
+// static void sdo_server_upload_request(CANopen *canopen, uint8_t, uint8_t nodeId, canopen_message_t *msg) {
+//   uint16_t index = msg->frame.sdo.index;
+//   uint8_t sub_index = msg->frame.sdo.index;
 
-  uint32_t obj_size = object_dictionary_get_size(index, sub_index);
-  if(obj_size == 0) {
-    // TODO send abort
-    return;
-  }
+//   uint32_t obj_size = object_dictionary_get_size(index, sub_index);
+//   if(obj_size == 0) {
+//     // TODO send abort
+//     return;
+//   }
 
 
-  // object_dictionary_read(index, sub_index)
-}
+//   // object_dictionary_read(index, sub_index)
+// }
 
 
