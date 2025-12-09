@@ -33,7 +33,7 @@ void canopen_init(CANopen *canopen, uint32_t ide)
 }
 
 
-CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint8_t fifo)
+CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint32_t id, uint8_t fifo)
 {
   CANopen_State res = CANOPEN_ERROR;
 

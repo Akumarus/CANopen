@@ -90,7 +90,7 @@ typedef struct {
 
 void canopen_init(CANopen *canopen, uint32_t ide);
 void canopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo); // TODO
-CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint16_t id, uint8_t fifo);
+CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint32_t id, uint8_t fifo);
 CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
 
 void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc);
