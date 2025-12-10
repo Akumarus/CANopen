@@ -62,7 +62,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-CANopen canopen = {0};
+canopen_t canopen = {0};
 canopen_message_t pdo0;
 canopen_message_t pdo1;
 canopen_message_t pdo2;
@@ -92,7 +92,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
   uint8_t data[8] = {0};
   if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, data) == HAL_OK)
   {
-    canopen_process_rx_message(&canopen, rx_header.StdId, data, rx_header.DLC);
+    // canopen_process_rx_message(&canopen, rx_header.StdId, data, rx_header.DLC);
   }
 }
 
@@ -103,7 +103,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
   uint8_t data[8] = {0};
   if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, data) == HAL_OK)
   {
-    canopen_process_rx_message(&canopen, rx_header.StdId, data, rx_header.DLC);
+    // canopen_process_rx_message(&canopen, rx_header.StdId, data, rx_header.DLC);
   }
 }
 
@@ -115,8 +115,8 @@ void pdo22_send()
 {
   pdo1.frame.pdo.data[0] = 10;
   pdo2.frame.pdo.data[1] = 11;
-  canopen_send_pdo(&canopen, &pdo1);
-  canopen_send_pdo(&canopen, &pdo2);
+  // canopen_send_pdo(&canopen, &pdo1);
+  // canopen_send_pdo(&canopen, &pdo2);
 }
 
 uint8_t data11[8] = {0};
@@ -177,19 +177,21 @@ int main(void)
   /* USER CODE BEGIN 2 */
   canopen_init(&canopen, COB_ID_STD);
 
-  canopen_config_pdo_tx(&canopen, pdo1_id, &pdo1, 3);
+  // canopen_config_pdo_tx(&canopen, pdo1_id, &pdo1, 3);
   // canopen_config_pdo_tx(&canopen, pdo2_id, &pdo2, 3);
 
   canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
   // canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
 
-  HAL_TIM_Base_Start_IT(&htim1);
+  // HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    // canopen_send_pdo(&canopen, &pdo1);
+    // canopen_process_tx_message(&canopen);
     can_send_packet(pdo1_id, COB_RTR_DATA, COB_ID_STD, 3, data11);
     HAL_Delay(500);
     /* USER CODE END WHILE */

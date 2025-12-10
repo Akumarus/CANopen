@@ -3,6 +3,7 @@
 
 #include "stdint.h"
 
+#pragma pack(push, 1)
 typedef struct
 {
     uint8_t bank;
@@ -17,12 +18,12 @@ typedef struct
     uint8_t fifo;
     uint8_t active;
     uint8_t end_bank;
-} CANopenFilterConfig;
+} canopen_filter_t;
+#pragma pack(pop)
 
-
-void can_init();
-void can_conf_filter(CANopenFilterConfig *filter);
-void can_send_packet(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlc, uint8_t* data);
+void port_can_init(void);
+void port_can_init_filter(canopen_filter_t *filter);
+void can_send_packet(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlc, uint8_t *data);
 uint32_t can_get_free_mailboxes(void);
 
 extern uint32_t mailbox;
