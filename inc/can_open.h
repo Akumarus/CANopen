@@ -100,18 +100,16 @@ typedef struct
 } canopen_t;
 
 canopen_state_t canopen_init(canopen_t *canopen, uint32_t ide);
-canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
 canopen_state_t canopen_process_tx(canopen_t *canopen);
-// void canopen_init(CANopen *canopen, uint32_t ide);
+canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
+canopen_state_t canopen_isr_handler(canopen_t *canopen, uint32_t fifo);
 // void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t mask, uint8_t fifo); // TODO
-// CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint32_t id, uint8_t fifo);
-// CANopen_State canopen_config_callback(CANopen *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
 
 // void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc);
 // void canopen_process_tx_message(CANopen *canopen);
 
 // CANopen_State is_valid_id(CANopen *canopen, uint16_t id);
-// CANopen_State is_valid_fifo(CANopen *canopen, uint8_t fifo);
+canopen_state_t is_valid_fifo(canopen_t *canopen, uint8_t fifo);
 // CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank);
 
 #endif // CAN_OPEN_H

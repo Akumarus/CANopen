@@ -61,8 +61,18 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+canopen_t canopen;
 
-canopen_t canopen = {0};
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+  canopen_isr_handler(&canopen, CAN_RX_FIFO0);
+}
+
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+  canopen_isr_handler(&canopen, CAN_RX_FIFO1);
+}
+
 canopen_msg_t pdo0;
 canopen_msg_t pdo1;
 canopen_msg_t pdo2;
@@ -84,28 +94,6 @@ uint32_t pdo6_id = 0x00000700;
 uint32_t pdo7_id = 0x00000701;
 uint32_t pdo8_id = 0x00000702;
 uint32_t pdo9_id = 0x00000703;
-
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-
-  CAN_RxHeaderTypeDef rx_header;
-  uint8_t data[8] = {0};
-  if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rx_header, data) == HAL_OK)
-  {
-    // canopen_process_rx_message(&canopen, rx_header.StdId, data, rx_header.DLC);
-  }
-}
-
-void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
-
-  CAN_RxHeaderTypeDef rx_header;
-  uint8_t data[8] = {0};
-  if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO1, &rx_header, data) == HAL_OK)
-  {
-    // canopen_process_rx_message(&canopen, rx_header.StdId, data, rx_header.DLC);
-  }
-}
 
 void pdo1_callback(uint32_t id, uint8_t *data, uint8_t dlc)
 {
@@ -177,11 +165,12 @@ int main(void)
   /* USER CODE BEGIN 2 */
   canopen_init(&canopen, COB_ID_STD);
 
-  canopen_config_pdo_tx(&canopen, &pdo1, pdo1_id, 3);
-  canopen_config_pdo_tx(&canopen, &pdo2, pdo2_id, 3);
-
-  canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
-  canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
+  canopen_config_pdo1_tx(&canopen, &pdo1, 12, 3);
+  canopen_config_pdo2_tx(&canopen, &pdo2, 12, 3);
+  canopen_config_pdo1_rx(&canopen, 12, &pdo1_callback);
+  canopen_config_pdo2_rx(&canopen, 12, &pdo1_callback);
+  // canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
+  // canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
 
   HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
@@ -190,7 +179,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    canopen_send_pdo(&canopen, &pdo1);
+    canopen_send_pdo(&canopen, &pdo1, data11, sizeof(data11));
     canopen_process_tx(&canopen);
     HAL_Delay(500);
     /* USER CODE END WHILE */
