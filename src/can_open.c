@@ -5,16 +5,23 @@
 static void canopen_config_filter_list_16b(canopen_t *canopen, uint32_t id, uint8_t fifo);
 static uint8_t find_free_bank(canopen_t *canopen, uint16_t id, uint8_t fifo);
 static canopen_state_t is_callback_register(canopen_t *canopen, uint32_t id);
-static void filter_bank_reset(canopen_t *canopen);
-static void callbacks_reset(canopen_t *canopen);
+static void filters_init(canopen_t *canopen);
+static void fifo_can_init(canopen_t *canopen);
+static void callbacks_init(canopen_t *canopen);
 
 canopen_state_t canopen_init(canopen_t *canopen, uint32_t ide)
 {
   if (canopen == NULL)
     return CANOPEN_ERROR;
 
-  callbacks_reset(canopen);
-  filter_bank_reset(canopen);
+  canopen->ide = ide;
+  canopen->info.bank_count = 0;
+  canopen->info.status.all = 0;
+  canopen->info.callbacks_count = 0;
+
+  filters_init(canopen);
+  callbacks_init(canopen);
+  fifo_can_init(canopen);
   port_can_init();
 
   return CANOPEN_OK;
@@ -36,32 +43,28 @@ canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t
   return CANOPEN_OK;
 }
 
-// void canopen_init(CANopen *canopen, uint32_t ide)
-// {
-//   if (canopen == NULL)
-//     return;
+canopen_state_t canopen_process_tx(canopen_t *canopen)
+{
+  if (fifo_is_empty(&canopen->fifo_tx))
+    return CANOPEN_ERROR;
 
-//   canopen->ide = ide;
-//   canopen->info.bank_count = 0;
-//   canopen->info.status.all = 0;
-//   canopen->info.callbacks_count = 0;
+  if (can_get_free_mailboxes() == 0)
+  {
+    canopen->info.tx_busy_mailbox_count++;
+    return CANOPEN_ERROR;
+  }
 
-//   for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
-//   {
-//     canopen->callbacks[i].id = 0;
-//     canopen->callbacks[i].callback = NULL;
-//   }
+  canopen_msg_t msg = {0};
+  if (fifo_pop(&canopen->fifo_tx, &msg) == FIFO_OK)
+  {
+    port_can_send(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row.data);
+    if (msg.type == TYPE_PDO)
+      canopen->info.tx_sended_pdo_count++;
+    return CANOPEN_OK;
+  }
 
-//   for (uint8_t i = 0; i < MAX_BANK_COUNT; i++)
-//     canopen->bank_list[i].fifo_assignment = 0xFF;
-
-//   CAN_FIFO_config tx_fifo_cnfg = {.message = canopen->tx_buff, .size = CAN_FIFO_SIZE};
-//   CAN_FIFO_config rx_fifo_cnfg = {.message = canopen->rx_buff, .size = CAN_FIFO_SIZE};
-//   can_fifo_init(&canopen->tx_fifo, tx_fifo_cnfg);
-//   can_fifo_init(&canopen->rx_fifo, rx_fifo_cnfg);
-
-//   can_init();
-// }
+  return CANOPEN_ERROR;
+}
 
 // CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint32_t id, uint8_t fifo)
 // {
@@ -145,7 +148,7 @@ static canopen_state_t is_callback_register(canopen_t *canopen, uint32_t id)
   return CANOPEN_OK;
 }
 
-static void callbacks_reset(canopen_t *canopen)
+static void callbacks_init(canopen_t *canopen)
 {
   for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
   {
@@ -154,10 +157,18 @@ static void callbacks_reset(canopen_t *canopen)
   }
 }
 
-static void filter_bank_reset(canopen_t *canopen)
+static void filters_init(canopen_t *canopen)
 {
   for (uint8_t i = 0; i < MAX_BANK_COUNT; i++)
     canopen->bank_list[i].fifo_assignment = 0xFF;
+}
+
+static void fifo_can_init(canopen_t *canopen)
+{
+  fifo_config_t fifo_tx_config = {.message = canopen->buffer_tx, .size = CAN_FIFO_SIZE};
+  fifo_config_t fifo_rx_config = {.message = canopen->buffer_rx, .size = CAN_FIFO_SIZE};
+  fifo_init(&canopen->fifo_tx, fifo_tx_config);
+  fifo_init(&canopen->fifo_rx, fifo_rx_config);
 }
 
 // // void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo)
@@ -174,28 +185,6 @@ static void filter_bank_reset(canopen_t *canopen)
 // //   filter.end_bank = 14; // TODO по дефолту 14
 // //   can_conf_filter(&filter);
 // // }
-
-// void canopen_process_tx_message(CANopen *canopen)
-// {
-//   if (can_fifo_is_empty(&canopen->tx_fifo))
-//   {
-//     return;
-//   }
-
-//   if (can_get_free_mailboxes() == 0)
-//   {
-//     canopen->info.tx_busy_mailbox_count++;
-//     return;
-//   }
-
-//   canopen_message_t msg = {0};
-//   if (can_fifo_pop(&canopen->tx_fifo, &msg) == FIFO_CAN_OK)
-//   {
-//     can_send_packet(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row.data);
-//     if (msg.type == TYPE_PDO)
-//       canopen->info.tx_sended_pdo_count++;
-//   }
-// }
 
 // void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc)
 // {

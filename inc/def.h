@@ -63,6 +63,7 @@ typedef union
     uint32_t data;     // 5-8 байты
   } sdo;
 } cob_frame_t;
+#pragma pack(pop)
 
 typedef struct
 {
@@ -70,6 +71,6 @@ typedef struct
   uint8_t dlc;
   msg_type_t type;
   cob_frame_t frame;
-} canopen_message_t;
+} canopen_msg_t;
 
 #endif // DEF_H

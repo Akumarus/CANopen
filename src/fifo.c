@@ -1,59 +1,64 @@
 #include "fifo.h"
 #include <string.h>
 
-FIFO_CAN_State can_fifo_init(CAN_FIFO *fifo, CAN_FIFO_config cnfg)
+fifo_state_t fifo_init(fifo_t *fifo, fifo_config_t config)
 {
-  if (fifo == NULL || cnfg.message == NULL || cnfg.size == 0)
-    return FIFO_CAN_ERROR;
+  if (fifo == NULL || config.message == NULL || config.size == 0)
+    return FIFO_ERROR;
 
-  memset(fifo, 0, sizeof(CAN_FIFO));
+  memset(fifo, 0, sizeof(fifo_t));
 
-  fifo->message = cnfg.message;
-  fifo->size = cnfg.size;
-  return FIFO_CAN_OK;
+  fifo->message = config.message;
+  fifo->size = config.size;
+  return FIFO_OK;
 }
 
-FIFO_CAN_State can_fifo_push(CAN_FIFO *fifo, canopen_message_t *msg)
+fifo_state_t fifo_push(fifo_t *fifo, canopen_msg_t *msg)
 {
   if (fifo == NULL || msg == NULL)
-    return FIFO_CAN_ERROR;
+    return FIFO_ERROR;
 
-  if (fifo->count >= fifo->size) {
-    fifo->lost_messages_count++;
-    return FIFO_CAN_FULL;
+  if (fifo->count >= fifo->size)
+  {
+    fifo->lost_msg_count++;
+    return FIFO_FULL;
   }
-  
-  memcpy(&fifo->message[fifo->head], msg, sizeof(canopen_message_t));
+
+  memcpy(&fifo->message[fifo->head], msg, sizeof(canopen_msg_t));
   fifo->head = (fifo->head + 1) % fifo->size;
   fifo->count++;
-  
-  return FIFO_CAN_OK;
+
+  return FIFO_OK;
 }
 
-FIFO_CAN_State can_fifo_pop(CAN_FIFO *fifo, canopen_message_t *msg)
+fifo_state_t fifo_pop(fifo_t *fifo, canopen_msg_t *msg)
 {
   if (fifo == NULL || msg == NULL)
-    return FIFO_CAN_ERROR;
+    return FIFO_ERROR;
 
-  if (fifo->count == 0) {
-    return FIFO_CAN_EMPTY;
+  if (fifo->count == 0)
+  {
+    return FIFO_EMPTY;
   }
 
-  memcpy(msg, &fifo->message[fifo->tail], sizeof(canopen_message_t));
+  memcpy(msg, &fifo->message[fifo->tail], sizeof(canopen_msg_t));
   fifo->tail = (fifo->tail + 1) % fifo->size;
   fifo->count--;
 
-  return FIFO_CAN_OK;
+  return FIFO_OK;
 }
 
-uint16_t can_fifo_is_empty(CAN_FIFO *fifo) {
+uint16_t fifo_is_empty(fifo_t *fifo)
+{
   return fifo->count == 0;
 }
 
-uint16_t can_fifo_is_full(CAN_FIFO *fifo) {
+uint16_t fifo_is_full(fifo_t *fifo)
+{
   return fifo->count >= fifo->size;
 }
 
-uint16_t can_fifo_get_lost_count(CAN_FIFO *fifo) {
-  return fifo->lost_messages_count;
+uint16_t fifo_get_lost(fifo_t *fifo)
+{
+  return fifo->lost_msg_count;
 }

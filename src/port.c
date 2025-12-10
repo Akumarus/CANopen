@@ -33,7 +33,7 @@ void port_can_init_filter(canopen_filter_t *filter)
   HAL_CAN_ConfigFilter(&hcan, &can_filter);
 }
 
-void can_send_packet(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uint8_t *data)
+void port_can_send(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uint8_t *data)
 {
   CAN_TxHeaderTypeDef txHeader = {0};
   txHeader.StdId = id;

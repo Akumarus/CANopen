@@ -63,16 +63,16 @@ void SystemClock_Config(void);
 /* USER CODE BEGIN 0 */
 
 canopen_t canopen = {0};
-canopen_message_t pdo0;
-canopen_message_t pdo1;
-canopen_message_t pdo2;
-canopen_message_t pdo3;
-canopen_message_t pdo4;
-canopen_message_t pdo5;
-canopen_message_t pdo6;
-canopen_message_t pdo7;
-canopen_message_t pdo8;
-canopen_message_t pdo9;
+canopen_msg_t pdo0;
+canopen_msg_t pdo1;
+canopen_msg_t pdo2;
+canopen_msg_t pdo3;
+canopen_msg_t pdo4;
+canopen_msg_t pdo5;
+canopen_msg_t pdo6;
+canopen_msg_t pdo7;
+canopen_msg_t pdo8;
+canopen_msg_t pdo9;
 
 uint32_t pdo0_id = 0x00000100;
 uint32_t pdo1_id = 0x00000200;
@@ -177,7 +177,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   canopen_init(&canopen, COB_ID_STD);
 
-  // canopen_config_pdo_tx(&canopen, pdo1_id, &pdo1, 3);
+  canopen_config_pdo_tx(&canopen, &pdo1, pdo1_id, 3);
   // canopen_config_pdo_tx(&canopen, pdo2_id, &pdo2, 3);
 
   canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
@@ -190,9 +190,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    // canopen_send_pdo(&canopen, &pdo1);
-    // canopen_process_tx_message(&canopen);
-    can_send_packet(pdo1_id, COB_RTR_DATA, COB_ID_STD, 3, data11);
+    canopen_send_pdo(&canopen, &pdo1);
+    canopen_process_tx(&canopen);
+    // port_can_send(pdo1_id, COB_RTR_DATA, COB_ID_STD, 3, data11);
     HAL_Delay(500);
     /* USER CODE END WHILE */
 

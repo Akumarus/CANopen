@@ -23,7 +23,7 @@ typedef struct
 
 void port_can_init(void);
 void port_can_init_filter(canopen_filter_t *filter);
-void can_send_packet(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlc, uint8_t *data);
+void port_can_send(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uint8_t *data);
 uint32_t can_get_free_mailboxes(void);
 
 extern uint32_t mailbox;

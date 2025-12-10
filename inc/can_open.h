@@ -76,22 +76,23 @@ typedef struct
   uint32_t tx_pdo_lost_count;
   uint32_t tx_fifo_full_errors;
   uint32_t tx_busy_mailbox_count;
-} CANopenInfo;
+} canopen_info_t;
 
 typedef struct
 {
   uint32_t ide;
+  fifo_t fifo_tx;
+  fifo_t fifo_rx;
+  canopen_info_t info;
+  canopen_msg_t buffer_tx[CAN_FIFO_SIZE];
+  canopen_msg_t buffer_rx[CAN_FIFO_SIZE];
   filter_bank_t bank_list[MAX_BANK_COUNT];
-  CANopenInfo info;
   canopen_handler_t callbacks[MAX_CALLBACKS];
-  canopen_message_t tx_buffer[CAN_FIFO_SIZE];
-  canopen_message_t rx_buffer[CAN_FIFO_SIZE];
-  // CAN_FIFO tx_fifo;
-  // CAN_FIFO rx_fifo;
 } canopen_t;
 
 canopen_state_t canopen_init(canopen_t *canopen, uint32_t ide);
 canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
+canopen_state_t canopen_process_tx(canopen_t *canopen);
 // void canopen_init(CANopen *canopen, uint32_t ide);
 // void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t mask, uint8_t fifo); // TODO
 // CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint32_t id, uint8_t fifo);

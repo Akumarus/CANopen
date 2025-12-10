@@ -3,35 +3,35 @@
 
 #include "def.h"
 
-#define FIFO_DATA_MAX_SIZE 8
-
 typedef enum
 {
-  FIFO_CAN_ERROR = 0,
-  FIFO_CAN_OK,
-  FIFO_CAN_FULL,
-  FIFO_CAN_EMPTY,
-} FIFO_CAN_State;
+  FIFO_ERROR = 0,
+  FIFO_OK,
+  FIFO_FULL,
+  FIFO_EMPTY,
+} fifo_state_t;
 
-typedef struct {
-  canopen_message_t* message;
+typedef struct
+{
+  canopen_msg_t *message;
   uint16_t size;
-} CAN_FIFO_config;
+} fifo_config_t;
 
-typedef struct {
-  canopen_message_t* message;
+typedef struct
+{
   uint16_t size;
   uint16_t head;
   uint16_t tail;
   uint16_t count;
-  uint32_t lost_messages_count;
-} CAN_FIFO;
+  uint32_t lost_msg_count;
+  canopen_msg_t *message;
+} fifo_t;
 
-FIFO_CAN_State can_fifo_init(CAN_FIFO *fifo, CAN_FIFO_config cnfg);
-FIFO_CAN_State can_fifo_push(CAN_FIFO *fifo, canopen_message_t *msg);
-FIFO_CAN_State can_fifo_pop(CAN_FIFO *fifo, canopen_message_t *msg);
-uint16_t can_fifo_is_empty(CAN_FIFO *fifo);
-uint16_t can_fifo_is_full(CAN_FIFO *fifo);
-uint16_t can_fifo_get_lost_count(CAN_FIFO *fifo);
+fifo_state_t fifo_init(fifo_t *fifo, fifo_config_t config);
+fifo_state_t fifo_push(fifo_t *fifo, canopen_msg_t *msg);
+fifo_state_t fifo_pop(fifo_t *fifo, canopen_msg_t *msg);
+uint16_t fifo_is_empty(fifo_t *fifo);
+uint16_t fifo_is_full(fifo_t *fifo);
+uint16_t fifo_get_lost(fifo_t *fifo);
 
-#endif //FIFO_CAN_H
+#endif // FIFO_CAN_H
