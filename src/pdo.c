@@ -11,7 +11,7 @@ canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, ui
 
   msg->id = id;
   msg->dlc = dlc;
-  msg->type = TYPE_PDO;
+  msg->type = TYPE_PDO1_TX;
   memset(msg->frame.pdo.data, 0, sizeof(msg->frame.pdo.data));
 
   return CANOPEN_OK;
@@ -25,7 +25,10 @@ canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg)
   canopen->info.tx_pdo_count++;
   fifo_state_t fifo_state = fifo_push(&canopen->fifo_tx, msg);
   if (fifo_state == FIFO_FULL)
+  {
     canopen->info.tx_pdo_lost_count++;
+    return CANOPEN_ERROR;
+  }
 
-  return fifo_state;
+  return CANOPEN_OK;
 }

@@ -1,6 +1,38 @@
 #include "sdo.h"
 #include "obj.h"
 
+canopen_state_t canopen_create_sdo(canopen_msg_t *msg, uint8_t cmd, uint16_t index, uint8_t sub_index, uint32_t data)
+{
+  if (msg == NULL)
+    return CANOPEN_ERROR;
+
+  msg->id = 0x0600; // TODO надо распределить дефолтные ID
+  msg->dlc = COB_SIZE_SDO;
+  msg->type = TYPE_SDO_TX;
+  msg->frame.sdo.cmd = cmd;
+  msg->frame.sdo.index = index;
+  msg->frame.sdo.sub_index = sub_index;
+  msg->frame.sdo.data = data;
+
+  return CANOPEN_OK;
+}
+
+canopen_state_t canopen_send_sdo(canopen_t *canopen, canopen_msg_t *msg)
+{
+  if (canopen == NULL || msg == NULL)
+    return CANOPEN_ERROR;
+
+  canopen->info.sdo_tx_counter++;
+  fifo_state_t fifo_state = fifo_push(&canopen->fifo_tx, msg);
+  if (fifo_state == FIFO_FULL)
+  {
+    canopen->info.sdo_tx_lost_counter++;
+    return CANOPEN_ERROR;
+  }
+
+  return CANOPEN_OK;
+}
+
 // FIFO_CAN_State canopen_send_sdo(CANopen *canopen, uint8_t node_id, canopen_message_t *msg)
 // {
 //   if (canopen == NULL || msg == NULL)

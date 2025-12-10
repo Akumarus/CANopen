@@ -1,7 +1,8 @@
 #ifndef PORT_H
 #define PORT_H
 
-#include "stdint.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #pragma pack(push, 1)
 typedef struct
@@ -24,8 +25,9 @@ typedef struct
 void port_can_init(void);
 void port_can_init_filter(canopen_filter_t *filter);
 void port_can_send(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uint8_t *data);
-uint32_t can_get_free_mailboxes(void);
-
+bool port_can_receive_message(uint32_t *id, uint8_t *data, uint8_t *dlc, uint32_t fifo);
+uint32_t port_get_timestamp(void);
+uint32_t port_get_free_mailboxes(void);
 extern uint32_t mailbox;
 
 #endif // PORT_H

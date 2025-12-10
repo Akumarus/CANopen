@@ -1,10 +1,12 @@
 #include "can_open.h"
 #include "port.h"
 #include <string.h>
+#include <stdbool.h>
 
 static void canopen_config_filter_list_16b(canopen_t *canopen, uint32_t id, uint8_t fifo);
 static uint8_t find_free_bank(canopen_t *canopen, uint16_t id, uint8_t fifo);
 static canopen_state_t is_callback_register(canopen_t *canopen, uint32_t id);
+static msg_type_t canopen_msg_type_from_id(uint32_t id);
 static void filters_init(canopen_t *canopen);
 static void fifo_can_init(canopen_t *canopen);
 static void callbacks_init(canopen_t *canopen);
@@ -45,25 +47,125 @@ canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t
 
 canopen_state_t canopen_process_tx(canopen_t *canopen)
 {
+  if (canopen == NULL)
+    return CANOPEN_ERROR;
+
   if (fifo_is_empty(&canopen->fifo_tx))
     return CANOPEN_ERROR;
 
-  if (can_get_free_mailboxes() == 0)
+  if (port_get_free_mailboxes() == 0)
   {
     canopen->info.tx_busy_mailbox_count++;
     return CANOPEN_ERROR;
   }
 
-  canopen_msg_t msg = {0};
+  canopen_msg_t msg;
   if (fifo_pop(&canopen->fifo_tx, &msg) == FIFO_OK)
   {
     port_can_send(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row.data);
-    if (msg.type == TYPE_PDO)
+    if (msg.type == TYPE_PDO1_TX)
       canopen->info.tx_sended_pdo_count++;
     return CANOPEN_OK;
   }
 
   return CANOPEN_ERROR;
+}
+
+canopen_state_t canopen_process_rx(canopen_t *canopen)
+{
+  if (canopen == NULL)
+    return CANOPEN_ERROR;
+
+  while (!fifo_is_empty(&canopen->fifo_rx))
+  {
+    canopen_msg_t msg;
+    if (fifo_pop(&canopen->fifo_rx, &msg) != FIFO_OK)
+      return CANOPEN_ERROR;
+
+    // bool callback_called = false;
+    // // TODO Нужно вынести в отдельную функцию
+    // for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
+    // {
+    //   if (canopen->callbacks[i].id == msg.id)
+    //   {
+    //     if(canopen->callbacks[i].callback != NULL)
+    //       canopen->callbacks[i].callback(canopen,&)
+    //   }
+    // }
+    switch (msg.type)
+    {
+    case TYPE_SDO_TX:
+      // TODO нужно получать id через inline func
+      if (msg.id >= 0x580 && msg.id <= 0x5FF)
+      {
+      }
+      else if (msg.id >= 0x600 && msg.id <= 0x67F)
+      {
+      }
+      break;
+    case TYPE_PDO1_TX:
+      break;
+    case TYPE_NMT:
+      break;
+    case TYPE_SYNC:
+      break;
+    case TYPE_EMCY:
+      break;
+    case TYPE_HEARTBEAT:
+      break;
+    default:
+      break;
+    }
+  }
+
+  return CANOPEN_OK;
+}
+
+canopen_state_t canopen_check_timeouts(canopen_t *canopen)
+{
+  if (canopen == NULL)
+    return CANOPEN_ERROR;
+
+  if (canopen->timestamp == 0)
+    return CANOPEN_ERROR;
+
+  uint32_t elapsed = port_get_timestamp() - canopen->timestamp;
+  if (elapsed > CANOPEN_TIMEOUT)
+  {
+    canopen->timestamp = 0;
+    canopen->info.sdo_timeout_counter++;
+    // TODO Вызов Timeout Callback
+    return CANOPEN_ERROR;
+  }
+
+  return CANOPEN_OK;
+}
+
+canopen_state_t canopen_rx_isr_handler(canopen_t *canopen, uint32_t fifo)
+{
+  if (canopen == NULL)
+    return CANOPEN_ERROR;
+
+  canopen_msg_t msg;
+  uint8_t data[COB_SIZE_DEF];
+  uint32_t id;
+  uint8_t dlc;
+
+  if (port_can_receive_message(&id, data, &dlc, fifo))
+  {
+    msg.id = id;
+    msg.dlc = dlc;
+    msg.type = canopen_msg_type_from_id(id);
+    memcpy(msg.frame.row.data, data, dlc);
+
+    if (fifo_push(&canopen->fifo_rx, &msg) != FIFO_OK)
+    {
+      canopen->info.fifo_rx_overflow_counter++;
+      return CANOPEN_ERROR;
+    }
+    canopen->info.fifo_rx_complete_counter++;
+  }
+  return CANOPEN_OK;
 }
 
 // CANopen_State canopen_config_filter_list_16b(CANopen *canopen, uint32_t id, uint8_t fifo)
@@ -169,6 +271,58 @@ static void fifo_can_init(canopen_t *canopen)
   fifo_config_t fifo_rx_config = {.message = canopen->buffer_rx, .size = CAN_FIFO_SIZE};
   fifo_init(&canopen->fifo_tx, fifo_tx_config);
   fifo_init(&canopen->fifo_rx, fifo_rx_config);
+}
+
+static msg_type_t canopen_msg_type_from_id(uint32_t id)
+{
+  switch (id)
+  {
+  case 0x000:
+    return TYPE_NMT;
+  case 0x080:
+    return TYPE_SYNC;
+  case 0x100:
+    return TYPE_TIMESTAMP;
+  case 0x7E4:
+    return TYPE_LSS_RX;
+  case 0x7E5:
+    return TYPE_LSS_TX;
+  }
+
+  // uint8_t node_id = id & 0x07F;
+  uint16_t base_id = id & 0x780;
+
+  switch (base_id)
+  {
+  case 0x080:
+    if (id >= 0x081 && id <= 0x0FF)
+      return TYPE_EMCY;
+    break;
+  case 0x180:
+    return TYPE_PDO1_TX;
+  case 0x200:
+    return TYPE_PDO1_RX;
+  case 0x280:
+    return TYPE_PDO1_TX;
+  case 0x300:
+    return TYPE_PDO1_RX;
+  case 0x380:
+    return TYPE_PDO1_TX;
+  case 0x400:
+    return TYPE_PDO1_RX;
+  case 0x480:
+    return TYPE_PDO1_TX;
+  case 0x500:
+    return TYPE_PDO1_RX;
+  case 0x580:
+    return TYPE_SDO_RX;
+  case 0x600:
+    return TYPE_SDO_TX;
+  case 0x700:
+    return TYPE_HEARTBEAT;
+  }
+
+  return TYPE_UNKNOWN;
 }
 
 // // void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo)

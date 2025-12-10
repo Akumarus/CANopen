@@ -7,12 +7,13 @@
 
 #define COB_SIZE_DEF 8
 #define COB_SIZE_PDO COB_SIZE_DEF // communication object
-#define COB_SIZE_SDO 4            // communication object
+#define COB_SIZE_SDO COB_SIZE_DEF // communication object
 #define MAX_BANK_COUNT 14
 #define IDS_PER_BANK 4
 #define MAX_CALLBACKS 10
 #define MAX_11BIT_ID 0x7FF
 #define CAN_FIFO_SIZE 32
+#define CANOPEN_TIMEOUT 1000
 
 typedef enum
 {
@@ -33,9 +34,25 @@ typedef enum
 
 typedef enum
 {
-  TYPE_NONE = 0,
-  TYPE_SDO,
-  TYPE_PDO,
+  TYPE_UNKNOWN = 0,
+  TYPE_NMT,
+  TYPE_SYNC,
+  TYPE_EMCY,
+  TYPE_TIMESTAMP,
+  TYPE_PDO1_TX,
+  TYPE_PDO1_RX,
+  TYPE_PDO2_TX,
+  TYPE_PDO2_RX,
+  TYPE_PDO3_TX,
+  TYPE_PDO3_RX,
+  TYPE_PDO4_TX,
+  TYPE_PDO4_RX,
+  TYPE_SDO_TX,
+  TYPE_SDO_RX,
+  TYPE_HEARTBEAT,
+  TYPE_RTR,
+  TYPE_LSS_TX,
+  TYPE_LSS_RX,
 } msg_type_t;
 
 typedef enum

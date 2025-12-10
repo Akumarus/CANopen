@@ -71,6 +71,14 @@ typedef struct
   uint8_t callbacks_count;
   uint32_t tx_mailbox;
   CANopenStatus status;
+  uint32_t sdo_tx_counter;
+  uint32_t sdo_rx_counter;
+  uint32_t sdo_tx_lost_counter;
+  uint32_t sdo_timeout_counter;
+
+  uint32_t fifo_rx_overflow_counter;
+  uint32_t fifo_rx_complete_counter;
+
   uint32_t tx_sended_pdo_count;
   uint32_t tx_pdo_count;
   uint32_t tx_pdo_lost_count;
@@ -80,6 +88,7 @@ typedef struct
 
 typedef struct
 {
+  uint32_t timestamp;
   uint32_t ide;
   fifo_t fifo_tx;
   fifo_t fifo_rx;

@@ -45,4 +45,7 @@ typedef struct
   sdo_state_t state;
   canopen_msg_t msg;
 } canopen_sdo_message_t;
+
+canopen_state_t canopen_create_sdo(canopen_msg_t *msg, uint8_t cmd, uint16_t index, uint8_t sub_index, uint32_t data);
+
 #endif // SDO_H

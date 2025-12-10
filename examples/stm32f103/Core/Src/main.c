@@ -178,12 +178,12 @@ int main(void)
   canopen_init(&canopen, COB_ID_STD);
 
   canopen_config_pdo_tx(&canopen, &pdo1, pdo1_id, 3);
-  // canopen_config_pdo_tx(&canopen, pdo2_id, &pdo2, 3);
+  canopen_config_pdo_tx(&canopen, &pdo2, pdo2_id, 3);
 
   canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
-  // canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
+  canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
 
-  // HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -192,7 +192,6 @@ int main(void)
   {
     canopen_send_pdo(&canopen, &pdo1);
     canopen_process_tx(&canopen);
-    // port_can_send(pdo1_id, COB_RTR_DATA, COB_ID_STD, 3, data11);
     HAL_Delay(500);
     /* USER CODE END WHILE */
 

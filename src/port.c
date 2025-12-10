@@ -44,7 +44,27 @@ void port_can_send(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uint8
   HAL_CAN_AddTxMessage(&hcan, &txHeader, data, &mailbox);
 }
 
-uint32_t can_get_free_mailboxes(void)
+uint32_t port_get_free_mailboxes(void)
 {
   return HAL_CAN_GetTxMailboxesFreeLevel(&hcan);
+}
+
+uint32_t port_get_timestamp(void)
+{
+  return HAL_GetTick();
+}
+
+bool port_can_receive_message(uint32_t *id, uint8_t *data, uint8_t *dlc, uint32_t fifo)
+{
+  if (id == NULL || data == NULL || dlc == NULL)
+    return false;
+
+  CAN_RxHeaderTypeDef rx_header;
+  if (HAL_CAN_GetRxMessage(&hcan, fifo, &rx_header, data) != HAL_OK)
+    return false;
+
+  *id = rx_header.StdId;
+  *dlc = rx_header.DLC;
+
+  return true;
 }
