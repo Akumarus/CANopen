@@ -1,3 +1,6 @@
 {
   "cmake.sourceDirectory": "${workspaceFolder}/examples/stm32f103",
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveMode": "file",
+  "editor.formatOnType": true
 }
