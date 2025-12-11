@@ -165,10 +165,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   canopen_init(&canopen, COB_ID_STD);
 
-  canopen_config_pdo1_tx(&canopen, &pdo1, 12, 3);
-  canopen_config_pdo2_tx(&canopen, &pdo2, 12, 3);
-  canopen_config_pdo1_rx(&canopen, 12, &pdo1_callback);
-  canopen_config_pdo2_rx(&canopen, 12, &pdo1_callback);
+  canopen_server_config_pdo1_tx(&canopen, &pdo1, 12, 3);
+  canopen_server_config_pdo2_tx(&canopen, &pdo2, 12, 3);
+  canopen_client_config_pdo1_rx(&canopen, 12, &pdo1_callback);
+  canopen_client_config_pdo2_rx(&canopen, 12, &pdo1_callback);
   // canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
   // canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
 
