@@ -43,7 +43,43 @@ typedef enum
 {
   PDO_CLIENT = 0,
   PDO_SERVER = 1,
-} pdo_direction_t;
+} pdo_role_t;
+
+typedef struct
+{
+  union
+  {
+    uint64_t u64;
+
+    struct
+    {
+      uint32_t low;
+      uint32_t high;
+    };
+
+    struct
+    {
+      uint16_t word0;
+      uint16_t word1;
+      uint16_t word2;
+      uint16_t word3;
+    };
+
+    struct
+    {
+      uint8_t byte0;
+      uint8_t byte1;
+      uint8_t byte2;
+      uint8_t byte3;
+      uint8_t byte4;
+      uint8_t byte5;
+      uint8_t byte6;
+      uint8_t byte7;
+    };
+  };
+} canopen_pdo_data_t;
+
+static_assert(sizeof(canopen_pdo_data_t) == 8, "canopen_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
 /* Client PDO Messages -------------------------------------------------*/
 #define canopen_client_config_pdo1_tx(canopen, msg, node_id, dlc) \
@@ -83,8 +119,8 @@ typedef enum
 #define canopen_server_config_pdo4_rx(canopen, node_id, callback) \
   canopen_config_pdo_rx(canopen, PDO_SERVER, PDO_NUM_4, node_id, callback)
 
-canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, uint8_t *data, uint8_t size);
+canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen_pdo_data_t *data);
 
-canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_direction_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback);
-canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pdo_direction_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, uint8_t dlc);
+canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback);
+canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, uint8_t dlc);
 #endif // PDO_H

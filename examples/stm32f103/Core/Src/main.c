@@ -179,7 +179,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    canopen_send_pdo(&canopen, &pdo1, data11, sizeof(data11));
+    canopen_pdo_data_t msg;
+    msg.word0 = 12345;
+    canopen_send_pdo(&canopen, &pdo1, &msg);
     canopen_process_tx(&canopen);
     HAL_Delay(500);
     /* USER CODE END WHILE */

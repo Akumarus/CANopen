@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <string.h>
+#include <assert.h>
 
 #define COB_SIZE_DEF 8
 #define COB_SIZE_PDO COB_SIZE_DEF // communication object

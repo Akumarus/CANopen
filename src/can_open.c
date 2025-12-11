@@ -303,6 +303,7 @@ static msg_type_t canopen_msg_type_from_id(uint32_t id)
   case 0x700:
     return TYPE_HEARTBEAT;
   }
+  return TYPE_UNKNOWN;
 }
 
 // // void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo)

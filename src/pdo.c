@@ -7,12 +7,13 @@
 #define PDO_TX_TYPE(pdo_num) ((msg_type_t)(TYPE_PDO1_TX + ((pdo_num) - 1)))
 #define PDO_RX_TYPE(pdo_num) ((msg_type_t)(TYPE_PDO1_RX + ((pdo_num) - 1)))
 
-canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, uint8_t *data, uint8_t size)
+canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen_pdo_data_t *data)
 {
   if (canopen == NULL || msg == NULL)
     return CANOPEN_ERROR;
 
   canopen->info.tx_pdo_count++;
+  memcpy(&msg->frame.pdo, data, msg->dlc);
   fifo_state_t fifo_state = fifo_push(&canopen->fifo_tx, msg);
   if (fifo_state == FIFO_FULL)
   {
@@ -23,7 +24,7 @@ canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, uint8_t
   return CANOPEN_OK;
 }
 
-canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pdo_direction_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, uint8_t dlc)
+canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, uint8_t dlc)
 {
   // TODO Более конкретные проверки
   if (msg == NULL || canopen == NULL || node_id == 0 || node_id > 127)
@@ -40,7 +41,7 @@ canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pd
   return CANOPEN_OK;
 }
 
-canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_direction_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback)
+canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback)
 {
   if (canopen == NULL || node_id == 0 || node_id > 127)
     return CANOPEN_ERROR;
