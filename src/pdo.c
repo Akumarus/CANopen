@@ -9,8 +9,11 @@
 
 canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen_pdo_data_t *data)
 {
-  if (canopen == NULL || msg == NULL)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
+  assert(data != NULL);
+  assert(msg != NULL);
+  assert(msg->dlc <= sizeof(canopen_pdo_data_t));
+  assert(msg->dlc <= COB_SIZE_PDO);
 
   canopen->info.tx_pdo_count++;
   memcpy(&msg->frame.pdo.data, data, msg->dlc);
@@ -26,9 +29,12 @@ canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen
 
 canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, uint8_t dlc)
 {
-  // TODO Более конкретные проверки
-  if (msg == NULL || canopen == NULL || node_id == 0 || node_id > 127)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
+  assert(msg != NULL);
+  assert(node_id < 128);
+  assert(node_id != 0);
+  assert(pdo_num >= PDO_NUM_1 && pdo_num <= PDO_NUM_4);
+  assert(pdo_dir == PDO_SERVER || pdo_dir == PDO_CLIENT);
 
   if (dlc > COB_SIZE_PDO)
     dlc = COB_SIZE_PDO;
@@ -43,8 +49,10 @@ canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pd
 
 canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback)
 {
-  if (canopen == NULL || node_id == 0 || node_id > 127)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
+  assert(callback != NULL);
+  assert(node_id < 128);
+  assert(node_id != 0);
 
   uint32_t id = (pdo_dir == PDO_SERVER) ? (PDO_RX_BASE(pdo_num) + node_id) : (PDO_TX_BASE(pdo_num) + node_id);
   return canopen_config_callback(canopen, id, 0, callback);

@@ -3,8 +3,7 @@
 
 canopen_state_t canopen_create_sdo(canopen_msg_t *msg, uint8_t cmd, uint16_t index, uint8_t sub_index, uint32_t data)
 {
-  if (msg == NULL)
-    return CANOPEN_ERROR;
+  assert(msg != NULL);
 
   msg->id = 0x0600; // TODO надо распределить дефолтные ID
   msg->dlc = COB_SIZE_SDO;
@@ -19,8 +18,8 @@ canopen_state_t canopen_create_sdo(canopen_msg_t *msg, uint8_t cmd, uint16_t ind
 
 canopen_state_t canopen_send_sdo(canopen_t *canopen, canopen_msg_t *msg)
 {
-  if (canopen == NULL || msg == NULL)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
+  assert(msg != NULL);
 
   canopen->info.sdo_tx_counter++;
   fifo_state_t fifo_state = fifo_push(&canopen->fifo_tx, msg);
