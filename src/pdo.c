@@ -13,7 +13,7 @@ canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen
     return CANOPEN_ERROR;
 
   canopen->info.tx_pdo_count++;
-  memcpy(&msg->frame.pdo, data, msg->dlc);
+  memcpy(&msg->frame.pdo.data, data, msg->dlc);
   fifo_state_t fifo_state = fifo_push(&canopen->fifo_tx, msg);
   if (fifo_state == FIFO_FULL)
   {
@@ -36,7 +36,7 @@ canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pd
   msg->id = (pdo_dir == PDO_SERVER) ? (PDO_TX_BASE(pdo_num) + node_id) : (PDO_RX_BASE(pdo_num) + node_id);
   msg->type = (pdo_dir == PDO_SERVER) ? PDO_TX_TYPE(pdo_num) : PDO_RX_TYPE(pdo_num);
   msg->dlc = dlc;
-  memset(msg->frame.pdo.data, 0, COB_SIZE_PDO);
+  memset(&msg->frame.pdo.data, 0, COB_SIZE_PDO);
 
   return CANOPEN_OK;
 }

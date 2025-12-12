@@ -45,42 +45,6 @@ typedef enum
   PDO_SERVER = 1,
 } pdo_role_t;
 
-typedef struct
-{
-  union
-  {
-    uint64_t u64;
-
-    struct
-    {
-      uint32_t low;
-      uint32_t high;
-    };
-
-    struct
-    {
-      uint16_t word0;
-      uint16_t word1;
-      uint16_t word2;
-      uint16_t word3;
-    };
-
-    struct
-    {
-      uint8_t byte0;
-      uint8_t byte1;
-      uint8_t byte2;
-      uint8_t byte3;
-      uint8_t byte4;
-      uint8_t byte5;
-      uint8_t byte6;
-      uint8_t byte7;
-    };
-  };
-} canopen_pdo_data_t;
-
-static_assert(sizeof(canopen_pdo_data_t) == 8, "canopen_pdo_data_t must be exactly 8 bytes for CAN PDO!");
-
 /* Client PDO Messages -------------------------------------------------*/
 #define canopen_client_config_pdo1_tx(canopen, msg, node_id, dlc) \
   canopen_config_pdo_tx(canopen, msg, PDO_CLIENT, PDO_NUM_1, node_id, dlc)

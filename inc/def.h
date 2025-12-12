@@ -62,6 +62,42 @@ typedef enum
   CANOPEN_ERROR,
 } canopen_state_t;
 
+typedef struct
+{
+  union
+  {
+    uint64_t u64;
+
+    struct
+    {
+      uint32_t low;
+      uint32_t high;
+    };
+
+    struct
+    {
+      uint16_t word0;
+      uint16_t word1;
+      uint16_t word2;
+      uint16_t word3;
+    };
+
+    struct
+    {
+      uint8_t byte0;
+      uint8_t byte1;
+      uint8_t byte2;
+      uint8_t byte3;
+      uint8_t byte4;
+      uint8_t byte5;
+      uint8_t byte6;
+      uint8_t byte7;
+    };
+  };
+} canopen_pdo_data_t;
+
+static_assert(sizeof(canopen_pdo_data_t) == 8, "canopen_pdo_data_t must be exactly 8 bytes for CAN PDO!");
+
 #pragma pack(push, 1)
 typedef union
 {
@@ -71,7 +107,7 @@ typedef union
   } row;
   struct
   {
-    uint8_t data[COB_SIZE_PDO]; // 1-8 байт
+    canopen_pdo_data_t data; // 1-8 байт
   } pdo;
   struct
   {

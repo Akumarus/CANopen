@@ -4,7 +4,7 @@
 #include "def.h"
 #include "fifo.h"
 
-typedef void (*canopen_callback)(uint32_t id, uint8_t *data, uint8_t dlc);
+typedef void (*canopen_callback)(canopen_msg_t *msg);
 
 typedef enum
 {
@@ -101,6 +101,7 @@ typedef struct
 
 canopen_state_t canopen_init(canopen_t *canopen, uint32_t ide);
 canopen_state_t canopen_process_tx(canopen_t *canopen);
+canopen_state_t canopen_process_rx(canopen_t *canopen);
 canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
 canopen_state_t canopen_isr_handler(canopen_t *canopen, uint32_t fifo);
 // void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t mask, uint8_t fifo); // TODO

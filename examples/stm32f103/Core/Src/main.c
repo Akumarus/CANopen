@@ -74,7 +74,7 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 }
 
 canopen_msg_t pdo0;
-canopen_msg_t pdo1;
+canopen_msg_t pdo1 = {0};
 canopen_msg_t pdo2;
 canopen_msg_t pdo3;
 canopen_msg_t pdo4;
@@ -95,21 +95,19 @@ uint32_t pdo7_id = 0x00000701;
 uint32_t pdo8_id = 0x00000702;
 uint32_t pdo9_id = 0x00000703;
 
-void pdo1_callback(uint32_t id, uint8_t *data, uint8_t dlc)
+void pdo1_callback(canopen_msg_t *msg)
 {
+  uint16_t lol = 0;
 }
 
 void pdo22_send()
 {
-  pdo1.frame.pdo.data[0] = 10;
-  pdo2.frame.pdo.data[1] = 11;
+  // pdo1.frame.pdo.data[0] = 10;
+  // pdo2.frame.pdo.data[1] = 11;
   // canopen_send_pdo(&canopen, &pdo1);
   // canopen_send_pdo(&canopen, &pdo2);
 }
 
-uint8_t data11[8] = {0};
-uint32_t mailbox1 = 0;
-CAN_TxHeaderTypeDef txHeader;
 // CAN_TxHeaderTypeDef txHeader;
 /* USER CODE END 0 */
 
@@ -165,8 +163,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   canopen_init(&canopen, COB_ID_STD);
 
-  canopen_server_config_pdo1_tx(&canopen, &pdo1, 12, 3);
-  canopen_server_config_pdo2_tx(&canopen, &pdo2, 12, 3);
+  canopen_server_config_pdo1_tx(&canopen, &pdo1, 12, 8);
+  canopen_server_config_pdo2_tx(&canopen, &pdo2, 12, 8);
   canopen_client_config_pdo1_rx(&canopen, 12, &pdo1_callback);
   canopen_client_config_pdo2_rx(&canopen, 12, &pdo1_callback);
   // canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
@@ -179,9 +177,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    canopen_pdo_data_t msg;
-    msg.word0 = 12345;
+    canopen_pdo_data_t msg = {0};
+    // msg.word0 = 12345;
+    msg.word1 = 12345;
+    // msg.word2 = 12345;
+    // msg.word3 = 12345;
     canopen_send_pdo(&canopen, &pdo1, &msg);
+    canopen_process_rx(&canopen);
     canopen_process_tx(&canopen);
     HAL_Delay(500);
     /* USER CODE END WHILE */

@@ -88,20 +88,20 @@ canopen_state_t canopen_process_rx(canopen_t *canopen)
 
   while (!fifo_is_empty(&canopen->fifo_rx))
   {
-    canopen_msg_t msg;
+    canopen_msg_t msg = {0};
     if (fifo_pop(&canopen->fifo_rx, &msg) != FIFO_OK)
       return CANOPEN_ERROR;
 
-    // bool callback_called = false;
     // // TODO Нужно вынести в отдельную функцию
-    // for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
-    // {
-    //   if (canopen->callbacks[i].id == msg.id)
-    //   {
-    //     if(canopen->callbacks[i].callback != NULL)
-    //       canopen->callbacks[i].callback(canopen,&)
-    //   }
-    // }
+    for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
+    {
+      if ((canopen->callbacks[i].id == msg.id) &&
+          (canopen->callbacks[i].callback != NULL))
+      {
+        canopen->callbacks[i].callback(&msg);
+      }
+    }
+
     switch (msg.type)
     {
     case TYPE_SDO_TX:
