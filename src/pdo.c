@@ -27,33 +27,32 @@ canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen
   return CANOPEN_OK;
 }
 
-canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, uint8_t dlc)
+canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, pdo_number_t pdo_num, uint8_t node_id, canopen_msg_t *msg, uint8_t dlc)
 {
   assert(canopen != NULL);
   assert(msg != NULL);
   assert(node_id < 128);
   assert(node_id != 0);
   assert(pdo_num >= PDO_NUM_1 && pdo_num <= PDO_NUM_4);
-  assert(pdo_dir == PDO_SERVER || pdo_dir == PDO_CLIENT);
 
   if (dlc > COB_SIZE_PDO)
     dlc = COB_SIZE_PDO;
 
-  msg->id = (pdo_dir == PDO_SERVER) ? (PDO_TX_BASE(pdo_num) + node_id) : (PDO_RX_BASE(pdo_num) + node_id);
-  msg->type = (pdo_dir == PDO_SERVER) ? PDO_TX_TYPE(pdo_num) : PDO_RX_TYPE(pdo_num);
+  msg->id = (canopen->role == CANOPEN_SERVER) ? (PDO_TX_BASE(pdo_num) + node_id) : (PDO_RX_BASE(pdo_num) + node_id);
+  msg->type = (canopen->role == CANOPEN_SERVER) ? PDO_TX_TYPE(pdo_num) : PDO_RX_TYPE(pdo_num);
   msg->dlc = dlc;
   memset(&msg->frame.pdo.data, 0, COB_SIZE_PDO);
 
   return CANOPEN_OK;
 }
 
-canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback)
+canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback)
 {
   assert(canopen != NULL);
   assert(callback != NULL);
   assert(node_id < 128);
   assert(node_id != 0);
 
-  uint32_t id = (pdo_dir == PDO_SERVER) ? (PDO_RX_BASE(pdo_num) + node_id) : (PDO_TX_BASE(pdo_num) + node_id);
+  uint32_t id = (canopen->role == CANOPEN_SERVER) ? (PDO_RX_BASE(pdo_num) + node_id) : (PDO_TX_BASE(pdo_num) + node_id);
   return canopen_config_callback(canopen, id, 0, callback);
 }

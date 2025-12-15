@@ -12,12 +12,13 @@ static void filters_init(canopen_t *canopen);
 static void fifo_can_init(canopen_t *canopen);
 static void callbacks_init(canopen_t *canopen);
 
-canopen_state_t canopen_init(canopen_t *canopen, uint32_t ide)
+canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint32_t ide)
 {
   if (canopen == NULL)
     return CANOPEN_ERROR;
 
   canopen->ide = ide;
+  canopen->role = role;
   canopen->info.bank_count = 0;
   canopen->info.status.all = 0;
   canopen->info.callbacks_count = 0;

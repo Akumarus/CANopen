@@ -39,52 +39,45 @@ typedef enum
   PDO_NUM_4 = 4,
 } pdo_number_t;
 
-typedef enum
-{
-  PDO_CLIENT = 0,
-  PDO_SERVER = 1,
-} pdo_role_t;
-
 /* Client PDO Messages -------------------------------------------------*/
 #define canopen_client_config_pdo1_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_CLIENT, PDO_NUM_1, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_1, node_id, msg, dlc)
 #define canopen_client_config_pdo2_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_CLIENT, PDO_NUM_2, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_2, node_id, msg, dlc)
 #define canopen_client_config_pdo3_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_CLIENT, PDO_NUM_3, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_3, node_id, msg, dlc)
 #define canopen_client_config_pdo4_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_CLIENT, PDO_NUM_4, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_4, node_id, msg, dlc)
 
 #define canopen_client_config_pdo1_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_CLIENT, PDO_NUM_1, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_1, node_id, callback)
 #define canopen_client_config_pdo2_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_CLIENT, PDO_NUM_2, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_2, node_id, callback)
 #define canopen_client_config_pdo3_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_CLIENT, PDO_NUM_3, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_3, node_id, callback)
 #define canopen_client_config_pdo4_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_CLIENT, PDO_NUM_4, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_4, node_id, callback)
 
 /* Server PDO Messages -------------------------------------------------*/
 #define canopen_server_config_pdo1_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_SERVER, PDO_NUM_1, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_1, node_id, msg, dlc)
 #define canopen_server_config_pdo2_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_SERVER, PDO_NUM_2, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_2, node_id, msg, dlc)
 #define canopen_server_config_pdo3_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_SERVER, PDO_NUM_3, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_3, node_id, msg, dlc)
 #define canopen_server_config_pdo4_tx(canopen, msg, node_id, dlc) \
-  canopen_config_pdo_tx(canopen, msg, PDO_SERVER, PDO_NUM_4, node_id, dlc)
+  canopen_config_pdo_tx(canopen, PDO_NUM_4, node_id, msg, dlc)
 
 #define canopen_server_config_pdo1_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_SERVER, PDO_NUM_1, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_1, node_id, callback)
 #define canopen_server_config_pdo2_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_SERVER, PDO_NUM_2, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_2, node_id, callback)
 #define canopen_server_config_pdo3_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_SERVER, PDO_NUM_3, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_3, node_id, callback)
 #define canopen_server_config_pdo4_rx(canopen, node_id, callback) \
-  canopen_config_pdo_rx(canopen, PDO_SERVER, PDO_NUM_4, node_id, callback)
+  canopen_config_pdo_rx(canopen, PDO_NUM_4, node_id, callback)
 
 canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen_pdo_data_t *data);
-
-canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback);
-canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, canopen_msg_t *msg, pdo_role_t pdo_dir, pdo_number_t pdo_num, uint8_t node_id, uint8_t dlc);
+canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_number_t pdo_num, uint8_t node_id, canopen_callback callback);
+canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, pdo_number_t pdo_num, uint8_t node_id, canopen_msg_t *msg, uint8_t dlc);
 #endif // PDO_H

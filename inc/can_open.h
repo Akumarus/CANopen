@@ -65,6 +65,12 @@ typedef struct
   uint8_t fifo_assignment;
 } filter_bank_t;
 
+typedef enum
+{
+  CANOPEN_SERVER = 0,
+  CANOPEN_CLIENT,
+} canopen_role_t;
+
 typedef struct
 {
   uint8_t bank_count;
@@ -92,6 +98,7 @@ typedef struct
   uint32_t ide;
   fifo_t fifo_tx;
   fifo_t fifo_rx;
+  canopen_role_t role;
   canopen_info_t info;
   canopen_msg_t buffer_tx[CAN_FIFO_SIZE];
   canopen_msg_t buffer_rx[CAN_FIFO_SIZE];
@@ -99,7 +106,7 @@ typedef struct
   canopen_handler_t callbacks[MAX_CALLBACKS];
 } canopen_t;
 
-canopen_state_t canopen_init(canopen_t *canopen, uint32_t ide);
+canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint32_t ide);
 canopen_state_t canopen_process_tx(canopen_t *canopen);
 canopen_state_t canopen_process_rx(canopen_t *canopen);
 canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);

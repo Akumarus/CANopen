@@ -161,7 +161,7 @@ int main(void)
   MX_CAN_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  canopen_init(&canopen, COB_ID_STD);
+  canopen_init(&canopen, CANOPEN_SERVER, COB_ID_STD);
 
   canopen_server_config_pdo1_tx(&canopen, &pdo1, 12, 8);
   canopen_server_config_pdo2_tx(&canopen, &pdo2, 12, 8);
