@@ -119,13 +119,25 @@ typedef union
 } cob_frame_t;
 #pragma pack(pop)
 
+typedef union
+{
+  uint16_t all;
+  struct
+  {
+    uint16_t sdo_pending : 1;
+    uint16_t pdo_pending : 1;
+    uint16_t nmt_pending : 1;
+    uint16_t reserve : 13;
+  } bit;
+} timeout_staus_t;
+
 typedef struct
 {
   uint8_t id;
-  uint16_t satus;
-  uint32_t pdo_timeout;
-  uint32_t sdo_timeout;
-  uint32_t nmt_timeout;
+  timeout_staus_t status;
+  uint32_t pdo_timestamp;
+  uint32_t sdo_timestamp;
+  uint32_t nmt_timestamp;
 } canopen_node_t;
 
 typedef struct
@@ -134,7 +146,7 @@ typedef struct
   uint8_t dlc;
   msg_type_t type;
   cob_frame_t frame;
-  canopen_node_t *node
+  canopen_node_t *node;
 } canopen_msg_t;
 
 #endif // DEF_H

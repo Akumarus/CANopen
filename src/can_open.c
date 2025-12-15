@@ -129,19 +129,31 @@ canopen_state_t canopen_process_rx(canopen_t *canopen)
 
 canopen_state_t canopen_check_timeouts(canopen_t *canopen)
 {
-  if (canopen == NULL)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
 
-  if (canopen->timestamp == 0)
-    return CANOPEN_ERROR;
+  uint32_t current_time = port_get_timestamp() - canopen->timestamp;
 
-  uint32_t elapsed = port_get_timestamp() - canopen->timestamp;
-  if (elapsed > CANOPEN_TIMEOUT)
+  for (uint8_t i = 0; i < NODES_COUNT; i++)
   {
-    canopen->timestamp = 0;
-    canopen->info.sdo_timeout_counter++;
-    // TODO Вызов Timeout Callback
-    return CANOPEN_ERROR;
+    canopen_node_t *node = &canopen->node[i];
+
+    if (node->id == 0xFF) // TODO задачть через дефайн или переменную
+      break;
+
+    if (node->sdo_timestamp != 0)
+    {
+      uint32_t elapsed;
+      if (current_time >= node->sdo_timestamp)
+        elapsed = current_time - node->sdo_timestamp;
+      else
+        elapsed = (UINT32_MAX - node->sdo_timestamp) + current_time + 1;
+
+      if (elapsed >= 1000) // TODO задачть через дефайн или переменную
+      {
+        node->sdo_timestamp = 0;
+        return CANOPEN_ERROR;
+      }
+    }
   }
 
   return CANOPEN_OK;

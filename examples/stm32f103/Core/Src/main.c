@@ -97,7 +97,7 @@ uint32_t pdo9_id = 0x00000703;
 
 void pdo1_callback(canopen_msg_t *msg)
 {
-  uint16_t lol = 0;
+  // uint16_t lol = 0;
 }
 
 void pdo22_send()
