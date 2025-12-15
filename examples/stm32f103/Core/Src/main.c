@@ -61,39 +61,28 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-canopen_t canopen;
+canopen_t canopen_client;
+canopen_t canopen_server;
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-  canopen_isr_handler(&canopen, CAN_RX_FIFO0);
+  canopen_isr_handler(&canopen_server, CAN_RX_FIFO0);
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-  canopen_isr_handler(&canopen, CAN_RX_FIFO1);
+  canopen_isr_handler(&canopen_server, CAN_RX_FIFO1);
 }
+
+#define NODE_ID_PLATE1 1
+#define NODE_ID_PLATE2 2
+#define NODE_ID_PLATE3 3
 
 canopen_msg_t pdo0;
 canopen_msg_t pdo1 = {0};
-canopen_msg_t pdo2;
-canopen_msg_t pdo3;
-canopen_msg_t pdo4;
-canopen_msg_t pdo5;
-canopen_msg_t pdo6;
-canopen_msg_t pdo7;
-canopen_msg_t pdo8;
-canopen_msg_t pdo9;
 
 uint32_t pdo0_id = 0x00000100;
 uint32_t pdo1_id = 0x00000200;
-uint32_t pdo2_id = 0x00000300;
-uint32_t pdo3_id = 0x00000400;
-uint32_t pdo4_id = 0x00000500;
-uint32_t pdo5_id = 0x00000600;
-uint32_t pdo6_id = 0x00000700;
-uint32_t pdo7_id = 0x00000701;
-uint32_t pdo8_id = 0x00000702;
-uint32_t pdo9_id = 0x00000703;
 
 void pdo1_callback(canopen_msg_t *msg)
 {
@@ -161,14 +150,20 @@ int main(void)
   MX_CAN_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  canopen_init(&canopen, CANOPEN_SERVER, COB_ID_STD);
+  canopen_init(&canopen_server, CANOPEN_SERVER, COB_ID_STD);
+  canopen_init(&canopen_server, CANOPEN_CLIENT, COB_ID_STD);
 
-  canopen_server_config_pdo1_tx(&canopen, &pdo1, 12, 8);
-  canopen_server_config_pdo2_tx(&canopen, &pdo2, 12, 8);
-  canopen_client_config_pdo1_rx(&canopen, 12, &pdo1_callback);
-  canopen_client_config_pdo2_rx(&canopen, 12, &pdo1_callback);
-  // canopen_config_callback(&canopen, pdo1_id, 1, &pdo1_callback);
-  // canopen_config_callback(&canopen, pdo2_id, 0, &pdo1_callback);
+  canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
+  canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
+  canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
+
+  canopen_server_config_pdo1_tx(&canopen_server, &pdo0, NODE_ID_PLATE1, 8);
+  canopen_server_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE1, 8);
+  // canopen_client_config_pdo1_rx(&canopen_server, NODE_ID_PLATE1, &pdo1_callback);
+  // canopen_client_config_pdo2_rx(&canopen_server, NODE_ID_PLATE1, &pdo1_callback);
+
+  canopen_client_config_pdo1_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+  canopen_client_config_pdo2_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
 
   HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
@@ -177,14 +172,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    canopen_pdo_data_t msg = {0};
-    // msg.word0 = 12345;
-    msg.word1 = 12345;
-    // msg.word2 = 12345;
-    // msg.word3 = 12345;
-    canopen_send_pdo(&canopen, &pdo1, &msg);
-    canopen_process_rx(&canopen);
-    canopen_process_tx(&canopen);
+    canopen_pdo_data_t pdo_data = {0};
+    pdo_data.word1 = 12345;
+    canopen_send_pdo(&canopen_server, &pdo1, &pdo_data);
+    canopen_process_rx(&canopen_server);
+    canopen_process_tx(&canopen_server);
+
+    canopen_process_rx(&canopen_client);
+    canopen_process_tx(&canopen_client);
     HAL_Delay(500);
     /* USER CODE END WHILE */
 

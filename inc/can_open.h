@@ -112,6 +112,7 @@ typedef struct
 canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint32_t ide);
 canopen_state_t canopen_process_tx(canopen_t *canopen);
 canopen_state_t canopen_process_rx(canopen_t *canopen);
+canopen_state_t canopen_config_node_id(canopen_t *canopen, uint8_t node_id);
 canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback);
 canopen_state_t canopen_isr_handler(canopen_t *canopen, uint32_t fifo);
 // void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t mask, uint8_t fifo); // TODO
