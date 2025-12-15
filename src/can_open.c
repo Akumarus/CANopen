@@ -1,7 +1,7 @@
 #include "can_open.h"
 #include "port.h"
-#include <string.h>
-#include <stdbool.h>
+#include "sdo.h"
+#include "pdo.h"
 
 static canopen_state_t canopen_config_filter_list_16b(canopen_t *canopen, uint32_t id, uint8_t fifo);
 static uint8_t find_free_bank(canopen_t *canopen, uint16_t id, uint8_t fifo);
@@ -106,13 +106,8 @@ canopen_state_t canopen_process_rx(canopen_t *canopen)
     switch (msg.type)
     {
     case TYPE_SDO_TX:
-      // TODO нужно получать id через inline func
-      if (msg.id >= 0x580 && msg.id <= 0x5FF)
-      {
-      }
-      else if (msg.id >= 0x600 && msg.id <= 0x67F)
-      {
-      }
+    case TYPE_SDO_RX:
+      canopen_sdo_process(canopen, &msg);
       break;
     case TYPE_PDO1_TX:
       break;

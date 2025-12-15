@@ -46,6 +46,8 @@ typedef struct
   canopen_msg_t msg;
 } canopen_sdo_message_t;
 
-canopen_state_t canopen_create_sdo(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id);
-
+canopen_state_t canopen_sdo_generate(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id);
+canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg);
+canopen_state_t canopen_sdo_process(canopen_t *canopen, canopen_msg_t *msg);
+void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg);
 #endif // SDO_H

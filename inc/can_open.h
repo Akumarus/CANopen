@@ -4,6 +4,8 @@
 #include "def.h"
 #include "fifo.h"
 
+#define NODES_COUNT 128
+
 typedef void (*canopen_callback)(canopen_msg_t *msg);
 
 typedef enum
@@ -100,6 +102,7 @@ typedef struct
   fifo_t fifo_rx;
   canopen_role_t role;
   canopen_info_t info;
+  canopen_node_t node[NODES_COUNT];
   canopen_msg_t buffer_tx[CAN_FIFO_SIZE];
   canopen_msg_t buffer_rx[CAN_FIFO_SIZE];
   filter_bank_t bank_list[MAX_BANK_COUNT];

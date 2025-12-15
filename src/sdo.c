@@ -1,32 +1,71 @@
 #include "sdo.h"
 #include "obj.h"
 
-canopen_state_t canopen_create_sdo(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id)
+static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id);
+
+#define SDO_DEFAULT_TIMEOUT_MS 1000
+
+__attribute__((weak)) void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg)
 {
+}
+
+canopen_state_t canopen_sdo_generate(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id)
+{
+  assert(canopen != NULL);
   assert(msg != NULL);
+  assert(node_id < 128);
 
   msg->id = (canopen->role == CANOPEN_SERVER) ? SDO_TX : SDO_RX;
   msg->id += node_id;
   msg->dlc = COB_SIZE_SDO;
   msg->type = TYPE_SDO_TX;
 
+  msg->node = get_node_index(canopen, node_id);
+  if (msg->node == NULL)
+    return CANOPEN_ERROR;
+
   return CANOPEN_OK;
 }
 
-canopen_state_t canopen_send_sdo(canopen_t *canopen, canopen_msg_t *msg)
+canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg)
 {
   assert(canopen != NULL);
   assert(msg != NULL);
+  assert(msg->node != NULL);
 
   canopen->info.sdo_tx_counter++;
+  msg->node->sdo_timeout = SDO_DEFAULT_TIMEOUT_MS;
   fifo_state_t fifo_state = fifo_push(&canopen->fifo_tx, msg);
   if (fifo_state == FIFO_FULL)
-  {
-    canopen->info.sdo_tx_lost_counter++;
     return CANOPEN_ERROR;
-  }
 
   return CANOPEN_OK;
+}
+
+canopen_state_t canopen_sdo_process(canopen_t *canopen, canopen_msg_t *msg)
+{
+  switch (msg->type)
+  {
+  case TYPE_SDO_TX:
+    break;
+
+  case TYPE_SDO_RX: // Ответ от сервера
+    canopen_sdo_callback(canopen, msg);
+    break;
+  default:
+    break;
+  }
+  return CANOPEN_OK;
+}
+
+static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id)
+{
+  for (uint8_t i = 0; i < NODES_COUNT; i++)
+  {
+    if (canopen->node[i].id == node_id)
+      return &canopen->node[i];
+  }
+  return NULL;
 }
 
 // FIFO_CAN_State canopen_send_sdo(CANopen *canopen, uint8_t node_id, canopen_message_t *msg)

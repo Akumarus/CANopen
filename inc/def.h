@@ -121,10 +121,20 @@ typedef union
 
 typedef struct
 {
+  uint8_t id;
+  uint16_t satus;
+  uint32_t pdo_timeout;
+  uint32_t sdo_timeout;
+  uint32_t nmt_timeout;
+} canopen_node_t;
+
+typedef struct
+{
   uint32_t id;
   uint8_t dlc;
   msg_type_t type;
   cob_frame_t frame;
+  canopen_node_t *node
 } canopen_msg_t;
 
 #endif // DEF_H
