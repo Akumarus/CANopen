@@ -98,6 +98,14 @@ typedef struct
 
 static_assert(sizeof(canopen_pdo_data_t) == 8, "canopen_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
+typedef struct
+{
+  uint8_t cmd;       // 1 байт
+  uint16_t index;    // 2-3 байты
+  uint8_t sub_index; // 4 байт
+  uint32_t data;     // 5-8 байты
+} canopen_sdo_data_t;
+
 #pragma pack(push, 1)
 typedef union
 {
@@ -109,13 +117,7 @@ typedef union
   {
     canopen_pdo_data_t data; // 1-8 байт
   } pdo;
-  struct
-  {
-    uint8_t cmd;       // 1 байт
-    uint16_t index;    // 2-3 байты
-    uint8_t sub_index; // 4 байт
-    uint32_t data;     // 5-8 байты
-  } sdo;
+  canopen_sdo_data_t sdo;
 } cob_frame_t;
 #pragma pack(pop)
 

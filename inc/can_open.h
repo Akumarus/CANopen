@@ -4,7 +4,7 @@
 #include "def.h"
 #include "fifo.h"
 
-#define NODES_COUNT 128
+#define NODES_COUNT 5
 
 typedef void (*canopen_callback)(canopen_msg_t *msg);
 
@@ -116,11 +116,6 @@ canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t
 canopen_state_t canopen_isr_handler(canopen_t *canopen, uint32_t fifo);
 // void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t mask, uint8_t fifo); // TODO
 
-// void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc);
-// void canopen_process_tx_message(CANopen *canopen);
-
-// CANopen_State is_valid_id(CANopen *canopen, uint16_t id);
 canopen_state_t is_valid_fifo(canopen_t *canopen, uint8_t fifo);
-// CANopen_State is_valid_bank(CANopen *canopen, uint8_t bank);
 
 #endif // CAN_OPEN_H

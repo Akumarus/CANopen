@@ -8,9 +8,10 @@ static uint8_t find_free_bank(canopen_t *canopen, uint16_t id, uint8_t fifo);
 static canopen_state_t is_callback_register(canopen_t *canopen, uint32_t id);
 static canopen_state_t is_valid_bank(canopen_t *canopen, uint8_t bank);
 static msg_type_t canopen_msg_type_from_id(uint32_t id);
-static void filters_init(canopen_t *canopen);
-static void fifo_can_init(canopen_t *canopen);
-static void callbacks_init(canopen_t *canopen);
+static void init_nodes(canopen_t *canopen);
+static void init_filters(canopen_t *canopen);
+static void init_fifo(canopen_t *canopen);
+static void init_callbacks(canopen_t *canopen);
 
 canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint32_t ide)
 {
@@ -23,12 +24,26 @@ canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint32_t i
   canopen->info.status.all = 0;
   canopen->info.callbacks_count = 0;
 
-  filters_init(canopen);
-  callbacks_init(canopen);
-  fifo_can_init(canopen);
+  init_fifo(canopen);
+  init_nodes(canopen);
+  init_filters(canopen);
+  init_callbacks(canopen);
   port_can_init();
 
   return CANOPEN_OK;
+}
+
+canopen_state_t canopen_config_node_id(canopen_t *canopen, uint8_t node_id)
+{
+  for (uint8_t i = 0; i < NODES_COUNT; i++) // TODO быстрый перебор
+  {
+    if (canopen->node[i].id == 0xFF)
+    {
+      canopen->node[i].id = node_id;
+      return CANOPEN_OK;
+    }
+  }
+  return CANOPEN_ERROR; // TODO Добавить статус
 }
 
 canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback)
@@ -240,7 +255,7 @@ static canopen_state_t is_callback_register(canopen_t *canopen, uint32_t id)
   return CANOPEN_OK;
 }
 
-static void callbacks_init(canopen_t *canopen)
+static void init_callbacks(canopen_t *canopen)
 {
   for (uint8_t i = 0; i < MAX_CALLBACKS; i++)
   {
@@ -249,13 +264,25 @@ static void callbacks_init(canopen_t *canopen)
   }
 }
 
-static void filters_init(canopen_t *canopen)
+static void init_nodes(canopen_t *canopen)
+{
+  for (uint8_t i = 0; i < NODES_COUNT; i++)
+  {
+    canopen->node[i].id = 0xFF;
+    canopen->node[i].status.all = 0;
+    canopen->node[i].sdo_timestamp = 0;
+    canopen->node[i].pdo_timestamp = 0;
+    canopen->node[i].nmt_timestamp = 0;
+  }
+}
+
+static void init_filters(canopen_t *canopen)
 {
   for (uint8_t i = 0; i < MAX_BANK_COUNT; i++)
     canopen->bank_list[i].fifo_assignment = 0xFF;
 }
 
-static void fifo_can_init(canopen_t *canopen)
+static void init_fifo(canopen_t *canopen)
 {
   fifo_config_t fifo_tx_config = {.message = canopen->buffer_tx, .size = CAN_FIFO_SIZE};
   fifo_config_t fifo_rx_config = {.message = canopen->buffer_rx, .size = CAN_FIFO_SIZE};
