@@ -184,7 +184,6 @@ int main(void)
   canopen_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
 
   /* Конфигурация SDO сообщений */
-  // canopen_config_callback(&canopen_server, 123, 1, &sdo_callback);
   canopen_sdo_config(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
   /*=======================================================================================*/
 

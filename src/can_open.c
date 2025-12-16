@@ -15,8 +15,10 @@ static void init_callbacks(canopen_t *canopen);
 
 canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint8_t node_id, uint32_t ide)
 {
-  if (canopen == NULL)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
+  assert((role == CANOPEN_CLIENT) || (role == CANOPEN_SERVER));
+  assert(node_id < 128);
+  assert(ide == COB_ID_STD);
 
   canopen->ide = ide;
   canopen->role = role;
@@ -36,6 +38,9 @@ canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint8_t no
 
 canopen_state_t canopen_config_node_id(canopen_t *canopen, uint8_t node_id)
 {
+  assert(canopen != NULL);
+  assert(node_id < 128);
+
   for (uint8_t i = 0; i < NODES_COUNT; i++) // TODO быстрый перебор
   {
     if (canopen->node[i].id == 0xFF)
@@ -49,18 +54,10 @@ canopen_state_t canopen_config_node_id(canopen_t *canopen, uint8_t node_id)
 
 canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t fifo, canopen_callback callback)
 {
-  // TODO проверка id
-  if (is_valid_fifo(canopen, fifo) != CANOPEN_OK)
-  {
-    canopen->info.status.bit.invalid_fifo = 1;
-    return CANOPEN_ERROR;
-  }
-
-  if (canopen->info.callbacks_count >= MAX_CALLBACKS)
-  {
-    canopen->info.status.bit.callbacks_full = 1;
-    return CANOPEN_ERROR;
-  }
+  assert(canopen != NULL);
+  assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
+  assert(callback != NULL);
+  assert(canopen->info.callbacks_count < MAX_CALLBACKS);
 
   if (is_callback_register(canopen, id))
     return CANOPEN_ERROR;
@@ -77,8 +74,7 @@ canopen_state_t canopen_config_callback(canopen_t *canopen, uint32_t id, uint8_t
 
 canopen_state_t canopen_process_tx(canopen_t *canopen)
 {
-  if (canopen == NULL)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
 
   if (port_get_free_mailboxes() == 0)
   {
@@ -100,8 +96,7 @@ canopen_state_t canopen_process_tx(canopen_t *canopen)
 
 canopen_state_t canopen_process_rx(canopen_t *canopen)
 {
-  if (canopen == NULL)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
 
   while (!fifo_is_empty(&canopen->fifo_rx))
   {
@@ -177,8 +172,8 @@ canopen_state_t canopen_check_timeouts(canopen_t *canopen)
 
 canopen_state_t canopen_isr_handler(canopen_t *canopen, uint32_t fifo)
 {
-  if (canopen == NULL)
-    return CANOPEN_ERROR;
+  assert(canopen != NULL);
+  assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
 
   canopen_msg_t msg;
   uint8_t data[COB_SIZE_DEF];
@@ -200,6 +195,14 @@ canopen_state_t canopen_isr_handler(canopen_t *canopen, uint32_t fifo)
     canopen->info.fifo_rx_complete_counter++;
   }
   return CANOPEN_OK;
+}
+
+uint8_t canopen_get_node_id(canopen_msg_t *msg)
+{
+  assert(msg != NULL);
+
+  uint32_t cobid = msg->id;
+  return cobid & 0x7F;
 }
 
 static canopen_state_t canopen_config_filter_list_16b(canopen_t *canopen, uint32_t id, uint8_t fifo)
