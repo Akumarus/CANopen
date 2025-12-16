@@ -4,18 +4,18 @@
 #include "def.h"
 #include "can_open.h"
 
-typedef enum
-{
-  SDO_STATE_IDLE = 0,
-  SDO_STATE_WAIT_RESPONSE,
-  SDO_STATE_SEGMENTED_IN_PROGRESS,
-  SDO_STATE_COMPLETED,
-  SDO_STATE_ERROR,
-  SDO_STATE_WAIT_RETRY,
-  SDO_STATE_RETRY_SENDING,
-  SDO_STATE_SERVER_PROCESSING,
-  SDO_STATE_SERVER_WAIT_SEGMENT,
-} sdo_state_t;
+// typedef enum
+// {
+//   SDO_STATE_IDLE = 0,
+//   SDO_STATE_WAIT_RESPONSE,
+//   SDO_STATE_SEGMENTED_IN_PROGRESS,
+//   SDO_STATE_COMPLETED,
+//   SDO_STATE_ERROR,
+//   SDO_STATE_WAIT_RETRY,
+//   SDO_STATE_RETRY_SENDING,
+//   SDO_STATE_SERVER_PROCESSING,
+//   SDO_STATE_SERVER_WAIT_SEGMENT,
+// } sdo_state_t;
 
 /*
  * Формат команды SDO (биты 7-0):
@@ -104,13 +104,28 @@ typedef enum
   SDO_SIZE_N_3BYTE = 0x0C, // n=3 (1 байт данных)
 } sdo_cmd_t;
 
-typedef struct
-{
-  sdo_state_t state;
-  canopen_msg_t msg;
-} canopen_sdo_message_t;
+#define canopen_sdo_abort(canopen, msg, index, sub_index, abort_code) \
+  canopen_sdo_transmit(canopen, msg, SDO_ABORT_TRANSFER, index, sub_index, abort_code);
 
-canopen_state_t canopen_sdo_generate(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id);
+#define canopen_sdo_write_32(canopen, msg, index, sub_index, data) \
+  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_4BYTE, index, sub_index, data)
+
+#define canopen_sdo_write_16(canopen, msg, index, sub_index, data) \
+  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_2BYTE, index, sub_index, data)
+
+#define canopen_sdo_write_8(canopen, msg, index, sub_index, data) \
+  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_1BYTE, index, sub_index, data)
+
+#define canopen_sdo_read_32(canopen, msg, index, sub_index) \
+  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0)
+
+#define canopen_sdo_read_16(canopen, msg, index, sub_index) \
+  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0);
+
+#define canopen_sdo_read_8(canopen, msg, index, sub_index) \
+  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0);
+
+canopen_state_t canopen_sdo_config(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id, canopen_callback callback);
 canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg, uint8_t cmd, uint16_t index, uint8_t sub_index, uint32_t data);
 canopen_state_t canopen_sdo_process(canopen_t *canopen, canopen_msg_t *msg);
 void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg);

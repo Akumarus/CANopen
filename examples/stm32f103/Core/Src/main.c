@@ -74,10 +74,17 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
   canopen_isr_handler(&canopen_server, CAN_RX_FIFO1);
 }
 
+void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg)
+{
+  uint8_t lol = 0;
+}
+
 #define NODE_ID_PLATE1 1
 #define NODE_ID_PLATE2 2
 #define NODE_ID_PLATE3 3
 
+canopen_msg_t sdo_client;
+canopen_msg_t sdo_server;
 canopen_msg_t pdo0;
 canopen_msg_t pdo1 = {0};
 
@@ -87,6 +94,10 @@ uint32_t pdo1_id = 0x00000200;
 void pdo1_callback(canopen_msg_t *msg)
 {
   // uint16_t lol = 0;
+}
+
+void sdo_callback(canopen_msg_t *msg)
+{
 }
 
 void pdo22_send()
@@ -120,7 +131,7 @@ int main(void)
   // device_data_t device_data = {
   //   .error_register = 0,
   //   .node_id = 1,
-  //   .heartbeat_time = 1000,
+  //   .heartbeat_time = 1000,&canopen_server
   //   .device_name = "MY_CANOPEN_DEVICE",
   //   .serial_number = 0x12345678,
   //   .product_code = 0xABCD,
@@ -150,20 +161,31 @@ int main(void)
   MX_CAN_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  /*CANopen SERVER ========================================================================*/
   canopen_init(&canopen_server, CANOPEN_SERVER, COB_ID_STD);
-  canopen_init(&canopen_server, CANOPEN_CLIENT, COB_ID_STD);
-
   canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
   canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
   canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
 
-  canopen_server_config_pdo1_tx(&canopen_server, &pdo0, NODE_ID_PLATE1, 8);
-  canopen_server_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE1, 8);
-  // canopen_client_config_pdo1_rx(&canopen_server, NODE_ID_PLATE1, &pdo1_callback);
-  // canopen_client_config_pdo2_rx(&canopen_server, NODE_ID_PLATE1, &pdo1_callback);
+  /* Конфигурация PDO сообщений */
+  canopen_config_pdo1_tx(&canopen_server, &pdo0, NODE_ID_PLATE1, 8);
+  canopen_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE1, 8);
 
-  canopen_client_config_pdo1_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
-  canopen_client_config_pdo2_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+  /* Конфигурация SDO сообщений */
+  // canopen_sdo_config(&canopen_server, &sdo_server, NODE_ID_PLATE1, &sdo_callback);
+  // canopen_sdo_read_8(&canopen_server, &sdo_msg, 0, 0);
+  /*=======================================================================================*/
+
+  /*CANopen CLIENT ========================================================================*/
+  canopen_init(&canopen_client, CANOPEN_CLIENT, COB_ID_STD);
+  canopen_config_node_id(&canopen_client, NODE_ID_PLATE1);
+  /* Конфигурация PDO сообщений */
+  canopen_config_pdo1_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+  canopen_config_pdo2_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+
+  /* Конфигурация SDO сообщений */
+  canopen_sdo_config(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
+  /*=======================================================================================*/
 
   HAL_TIM_Base_Start_IT(&htim1);
   /* USER CODE END 2 */
@@ -174,7 +196,8 @@ int main(void)
   {
     canopen_pdo_data_t pdo_data = {0};
     pdo_data.word1 = 12345;
-    canopen_send_pdo(&canopen_server, &pdo1, &pdo_data);
+    canopen_sdo_read_8(&canopen_client, &sdo_client, 1, 0);
+    // canopen_send_pdo(&canopen_server, &pdo1, &pdo_data);
     canopen_process_rx(&canopen_server);
     canopen_process_tx(&canopen_server);
 

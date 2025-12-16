@@ -10,37 +10,7 @@ __attribute__((weak)) void canopen_sdo_callback(canopen_t *canopen, canopen_msg_
 {
 }
 
-canopen_state_t canopen_sdo_write_32(canopen_t *canopen, canopen_msg_t *msg, uint16_t index, uint8_t sub_index, uint32_t data)
-{
-  return canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_4BYTE, index, sub_index, data);
-}
-
-canopen_state_t canopen_sdo_write_16(canopen_t *canopen, canopen_msg_t *msg, uint16_t index, uint8_t sub_index, uint16_t data)
-{
-  return canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_2BYTE, index, sub_index, data);
-}
-
-canopen_state_t canopen_sdo_write_8(canopen_t *canopen, canopen_msg_t *msg, uint16_t index, uint8_t sub_index, uint8_t data)
-{
-  return canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_1BYTE, index, sub_index, data);
-}
-
-canopen_state_t canopen_sdo_read_32(canopen_t *canopen, canopen_msg_t *msg, uint16_t index, uint8_t sub_index)
-{
-  return canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0);
-}
-
-canopen_state_t canopen_sdo_read_16(canopen_t *canopen, canopen_msg_t *msg, uint16_t index, uint8_t sub_index)
-{
-  return canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0);
-}
-
-canopen_state_t canopen_sdo_read_8(canopen_t *canopen, canopen_msg_t *msg, uint16_t index, uint8_t sub_index)
-{
-  return canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0);
-}
-
-canopen_state_t canopen_sdo_generate(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id)
+canopen_state_t canopen_sdo_config(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id, canopen_callback callback)
 {
   assert(canopen != NULL);
   assert(msg != NULL);
@@ -48,16 +18,16 @@ canopen_state_t canopen_sdo_generate(canopen_t *canopen, canopen_msg_t *msg, uin
 
   memset(msg, 0, sizeof(canopen_msg_t));
 
-  msg->id = (canopen->role == CANOPEN_SERVER) ? SDO_TX : SDO_RX;
+  msg->id = (canopen->role == CANOPEN_CLIENT) ? SDO_TX : SDO_RX;
   msg->id += node_id;
+  msg->type = (canopen->role == CANOPEN_CLIENT) ? TYPE_SDO_TX : TYPE_SDO_RX;
   msg->dlc = COB_SIZE_SDO;
-  msg->type = TYPE_SDO_TX;
 
   msg->node = get_node_index(canopen, node_id);
   if (msg->node == NULL)
     return CANOPEN_ERROR;
 
-  return CANOPEN_OK;
+  return canopen_config_callback(canopen, msg->id, 1, callback);
 }
 
 canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg,
@@ -83,23 +53,19 @@ canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg,
 
 canopen_state_t canopen_sdo_process(canopen_t *canopen, canopen_msg_t *msg)
 {
-  switch (msg->type)
-  {
-  case TYPE_SDO_TX:
-    break;
+  if (!msg->node->status.bit.sdo_pending)
+    return CANOPEN_ERROR;
 
-  case TYPE_SDO_RX: // Ответ от сервера
-    msg->node = get_node_index(canopen, msg->id);
-    if (msg->node != NULL)
-    {
-      msg->node->sdo_timestamp = 0;
-      msg->node->status.bit.sdo_pending = 0;
-    }
-    canopen_sdo_callback(canopen, msg);
-    break;
-  default:
-    break;
-  }
+  msg->node = get_node_index(canopen, msg->id);
+  if (msg->node == NULL)
+    return CANOPEN_ERROR;
+
+  // TODO Abort CMD
+
+  // Сброс таймера
+  msg->node->sdo_timestamp = 0;
+  msg->node->status.bit.sdo_pending = 0;
+  canopen_sdo_callback(canopen, msg);
   return CANOPEN_OK;
 }
 
