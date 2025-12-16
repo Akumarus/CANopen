@@ -96,6 +96,7 @@ typedef struct
 
 typedef struct
 {
+  uint8_t node_id;
   uint32_t timestamp;
   uint32_t ide;
   fifo_t fifo_tx;
@@ -109,7 +110,7 @@ typedef struct
   canopen_handler_t callbacks[MAX_CALLBACKS];
 } canopen_t;
 
-canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint32_t ide);
+canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint8_t node_id, uint32_t ide);
 canopen_state_t canopen_process_tx(canopen_t *canopen);
 canopen_state_t canopen_process_rx(canopen_t *canopen);
 canopen_state_t canopen_config_node_id(canopen_t *canopen, uint8_t node_id);

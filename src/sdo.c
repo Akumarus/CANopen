@@ -27,7 +27,10 @@ canopen_state_t canopen_sdo_config(canopen_t *canopen, canopen_msg_t *msg, uint8
   if (msg->node == NULL)
     return CANOPEN_ERROR;
 
-  return canopen_config_callback(canopen, msg->id, 1, callback);
+  uint32_t id = (canopen->role == CANOPEN_CLIENT) ? SDO_RX : SDO_TX;
+  id += canopen->node_id;
+
+  return canopen_config_callback(canopen, id, 1, callback);
 }
 
 canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg,

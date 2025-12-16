@@ -161,30 +161,31 @@ int main(void)
   MX_CAN_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-  /*CANopen SERVER ========================================================================*/
-  canopen_init(&canopen_server, CANOPEN_SERVER, COB_ID_STD);
-  canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
-  canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
-  canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
-
-  /* Конфигурация PDO сообщений */
-  canopen_config_pdo1_tx(&canopen_server, &pdo0, NODE_ID_PLATE1, 8);
-  canopen_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE1, 8);
-
-  /* Конфигурация SDO сообщений */
-  // canopen_sdo_config(&canopen_server, &sdo_server, NODE_ID_PLATE1, &sdo_callback);
-  // canopen_sdo_read_8(&canopen_server, &sdo_msg, 0, 0);
-  /*=======================================================================================*/
-
   /*CANopen CLIENT ========================================================================*/
-  canopen_init(&canopen_client, CANOPEN_CLIENT, COB_ID_STD);
+  canopen_init(&canopen_client, CANOPEN_CLIENT, NODE_ID_PLATE2, COB_ID_STD);
   canopen_config_node_id(&canopen_client, NODE_ID_PLATE1);
+
   /* Конфигурация PDO сообщений */
   canopen_config_pdo1_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
   canopen_config_pdo2_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
 
   /* Конфигурация SDO сообщений */
   canopen_sdo_config(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
+  /*=======================================================================================*/
+
+  /*CANopen SERVER ========================================================================*/
+  canopen_init(&canopen_server, CANOPEN_SERVER, NODE_ID_PLATE1, COB_ID_STD);
+  canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
+  canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
+  canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
+
+  /* Конфигурация PDO сообщений */
+  canopen_config_pdo1_tx(&canopen_server, &pdo0, NODE_ID_PLATE2, 8);
+  canopen_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
+
+  /* Конфигурация SDO сообщений */
+  // canopen_config_callback(&canopen_server, 123, 1, &sdo_callback);
+  canopen_sdo_config(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
   /*=======================================================================================*/
 
   HAL_TIM_Base_Start_IT(&htim1);
