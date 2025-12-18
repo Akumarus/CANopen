@@ -127,7 +127,7 @@ typedef enum
 
 canopen_state_t canopen_sdo_config(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id, canopen_callback callback);
 canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg, uint8_t cmd, uint16_t index, uint8_t sub_index, uint32_t data);
-canopen_state_t canopen_sdo_process(canopen_t *canopen, canopen_msg_t *msg);
+canopen_state_t canopen_client_process_sdo(canopen_t *canopen, canopen_msg_t *msg);
 void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg);
 
 #endif // SDO_H

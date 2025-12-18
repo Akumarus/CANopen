@@ -117,8 +117,9 @@ canopen_state_t canopen_process_rx(canopen_t *canopen)
     switch (msg.type)
     {
     case TYPE_SDO_TX:
+      canopen_client_process_sdo(canopen, &msg);
     case TYPE_SDO_RX:
-      canopen_sdo_process(canopen, &msg);
+
       break;
     case TYPE_PDO1_TX:
       break;
@@ -170,29 +171,25 @@ canopen_state_t canopen_check_timeouts(canopen_t *canopen)
   return CANOPEN_OK;
 }
 
-canopen_state_t canopen_isr_handler(canopen_t *canopen, uint32_t fifo)
+canopen_state_t canopen_send_msg_to_fifo_rx(canopen_t *canopen, canopen_msg_t *msg)
 {
   assert(canopen != NULL);
+  assert(msg != NULL);
+
+  if (fifo_push(&canopen->fifo_rx, msg) != FIFO_OK)
+    return CANOPEN_ERROR;
+
+  return CANOPEN_OK;
+}
+
+canopen_state_t canopen_get_msg_from_handler(canopen_msg_t *msg, uint32_t fifo)
+{
+  assert(msg != NULL);
   assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
 
-  canopen_msg_t msg;
-  uint8_t data[COB_SIZE_DEF];
-  uint32_t id;
-  uint8_t dlc;
-
-  if (port_can_receive_message(&id, data, &dlc, fifo))
+  if (port_can_receive_message(&msg->id, msg->frame.row.data, &msg->dlc, fifo))
   {
-    msg.id = id;
-    msg.dlc = dlc;
-    msg.type = canopen_msg_type_from_id(id);
-    memcpy(msg.frame.row.data, data, dlc);
-
-    if (fifo_push(&canopen->fifo_rx, &msg) != FIFO_OK)
-    {
-      canopen->info.fifo_rx_overflow_counter++;
-      return CANOPEN_ERROR;
-    }
-    canopen->info.fifo_rx_complete_counter++;
+    msg->type = canopen_msg_type_from_id(msg->id);
   }
   return CANOPEN_OK;
 }

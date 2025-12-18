@@ -64,24 +64,52 @@ void SystemClock_Config(void);
 canopen_t canopen_client;
 canopen_t canopen_server;
 
+#define NODE_ID_PLATE1 1
+#define NODE_ID_PLATE2 2
+#define NODE_ID_PLATE3 3
+
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-  canopen_isr_handler(&canopen_server, CAN_RX_FIFO0);
+  // TODO нужно спрятать под капот определение инстанса
+  canopen_msg_t msg;
+  canopen_get_msg_from_handler(&msg, CAN_RX_FIFO0);
+  switch (canopen_get_node_id(&msg))
+  {
+  case NODE_ID_PLATE1:
+    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
+    break;
+  case NODE_ID_PLATE2:
+    canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
+    break;
+  default:
+    break;
+  }
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-  canopen_isr_handler(&canopen_server, CAN_RX_FIFO1);
+  uint8_t node_id;
+  canopen_msg_t msg = {0};
+  canopen_get_msg_from_handler(&msg, CAN_RX_FIFO1);
+  node_id = canopen_get_node_id(&msg);
+  switch (node_id)
+  {
+  case NODE_ID_PLATE1:
+    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
+
+    break;
+  case NODE_ID_PLATE2:
+    canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
+    break;
+  default:
+    break;
+  }
 }
 
 void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg)
 {
   uint8_t lol = 0;
 }
-
-#define NODE_ID_PLATE1 1
-#define NODE_ID_PLATE2 2
-#define NODE_ID_PLATE3 3
 
 canopen_msg_t sdo_client;
 canopen_msg_t sdo_server;
@@ -196,8 +224,9 @@ int main(void)
   {
     canopen_pdo_data_t pdo_data = {0};
     pdo_data.word1 = 12345;
+
     canopen_sdo_read_8(&canopen_client, &sdo_client, 1, 0);
-    // canopen_send_pdo(&canopen_server, &pdo1, &pdo_data);
+
     canopen_process_rx(&canopen_server);
     canopen_process_tx(&canopen_server);
 

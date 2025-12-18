@@ -54,7 +54,7 @@ canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg,
   return (fifo_state == FIFO_FULL) ? CANOPEN_ERROR : CANOPEN_OK;
 }
 
-canopen_state_t canopen_sdo_process(canopen_t *canopen, canopen_msg_t *msg)
+canopen_state_t canopen_client_process_sdo(canopen_t *canopen, canopen_msg_t *msg)
 {
   if (!msg->node->status.bit.sdo_pending)
     return CANOPEN_ERROR;
@@ -71,6 +71,8 @@ canopen_state_t canopen_sdo_process(canopen_t *canopen, canopen_msg_t *msg)
   canopen_sdo_callback(canopen, msg);
   return CANOPEN_OK;
 }
+
+// canopen_state_t canopen_server_process_sdo(canopen_t *canopen, canopen)
 
 static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id)
 {
