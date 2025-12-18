@@ -3,7 +3,8 @@
 
 #include "obj.h"
 
-typedef struct {
+typedef struct
+{
   uint32_t error_register;
   uint8_t node_id;
   uint32_t heartbeat_time;
@@ -22,17 +23,7 @@ typedef struct {
   uint32_t error_history[4];
 } device_data_t;
 
-device_data_t device_data;
-
-od_type object_dictionary[3] = {
-/* -------------------------------------------------------------------------------------------------------------------------- */
-/* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer           | Min |        Max        |*/
-/* -------------------------------------------------------------------------------------------------------------------------- */
-  {"Error register  ", 0x1000,    0x00,     OD_TYPE_UINT32,   OD_RO, &device_data.error_register,    {0}, {.u32 = 0xFFFFFFFF}},
-  {"Error history[0]", 0x1001,    0x00,     OD_TYPE_INT8,     OD_RO, &device_data.error_history[0],  {0}, {.i8 = 127}        },
-  {"Device Name     ", 0x1008,    0x00,     OD_TYPE_STRING,   OD_RO, &device_data.device_name,       {0}, {0}                }
-};
-
-#define OBJECT_DICTIONARY_SIZE (sizeof(object_dictionary) / sizeof(od_type))
-
+extern device_data_t device_data;
+extern od_type object_dictionary[3];
+#define OBJECT_DICTIONARY_SIZE 3
 #endif // PARAMS_H

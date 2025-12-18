@@ -3,6 +3,7 @@
 #include "port.h"
 
 static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id);
+static canopen_state_t canopen_server_processsdo_upload_initiate(canopen_t *canopen, canopen_msg_t *msg);
 
 #define SDO_DEFAULT_TIMEOUT_MS 1000
 
@@ -72,7 +73,35 @@ canopen_state_t canopen_client_process_sdo(canopen_t *canopen, canopen_msg_t *ms
   return CANOPEN_OK;
 }
 
-// canopen_state_t canopen_server_process_sdo(canopen_t *canopen, canopen)
+canopen_state_t canopen_server_process_sdo(canopen_t *canopen, canopen_msg_t *msg)
+{
+  switch (msg->frame.sdo.cmd)
+  {
+  case SDO_CLIENT_INITIATE_UPLOAD:
+    canopen_server_processsdo_upload_initiate(canopen, msg);
+    break;
+
+  case SDO_CLIENT_WRITE_1BYTE:
+  case SDO_CLIENT_WRITE_2BYTE:
+  case SDO_CLIENT_WRITE_3BYTE:
+  case SDO_CLIENT_WRITE_4BYTE:
+    break;
+
+  case SDO_ABORT_TRANSFER:
+    break;
+  }
+  return CANOPEN_OK;
+}
+
+static canopen_state_t canopen_server_processsdo_upload_initiate(canopen_t *canopen, canopen_msg_t *msg)
+{
+  uint16_t data_size;
+  data_size = object_dictionary_get_size(msg->frame.sdo.index, msg->frame.sdo.sub_index);
+  if (data_size <= 4)
+  {
+  }
+  return CANOPEN_OK;
+}
 
 static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id)
 {

@@ -117,9 +117,9 @@ canopen_state_t canopen_process_rx(canopen_t *canopen)
     switch (msg.type)
     {
     case TYPE_SDO_TX:
-      canopen_client_process_sdo(canopen, &msg);
+      canopen_server_process_sdo(canopen, &msg);
     case TYPE_SDO_RX:
-
+      canopen_client_process_sdo(canopen, &msg);
       break;
     case TYPE_PDO1_TX:
       break;

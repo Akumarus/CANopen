@@ -30,6 +30,7 @@
 #include "sdo.h"
 #include "fifo.h"
 #include "port.h"
+#include "params.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,6 +62,33 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+device_data_t device_data = {
+    .error_register = 0,
+    .node_id = 1,
+    .heartbeat_time = 1000,
+    .device_name = "MY_CANOPEN_DEVICE",
+    .serial_number = 0x12345678,
+    .product_code = 0xABCD,
+    .baudrate = 250,
+    .operating_mode = 3,
+    .target_position = 0,
+    .actual_position = 0,
+    .target_velocity = 0,
+    .actual_velocity = 0,
+    .control_word = 0,
+    .status_word = 0,
+    .temperature = 25,
+    .error_history = {0}};
+
+od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
+    /* -------------------------------------------------------------------------------------------------------------------------- */
+    /* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer           | Min |        Max        |*/
+    /* -------------------------------------------------------------------------------------------------------------------------- */
+    {"Error register  ", 0x1000, 0x00, OD_TYPE_UINT32, OD_RO, &device_data.error_register, {0}, {.u32 = 0xFFFFFFFF}},
+    {"Error history[0]", 0x1001, 0x00, OD_TYPE_INT8, OD_RO, &device_data.error_history[0], {0}, {.i8 = 127}},
+    {"Device Name     ", 0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name, {0}, {0}}};
+
 canopen_t canopen_client;
 canopen_t canopen_server;
 
@@ -156,25 +184,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-  // device_data_t device_data = {
-  //   .error_register = 0,
-  //   .node_id = 1,
-  //   .heartbeat_time = 1000,&canopen_server
-  //   .device_name = "MY_CANOPEN_DEVICE",
-  //   .serial_number = 0x12345678,
-  //   .product_code = 0xABCD,
-  //   .baudrate = 250,
-  //   .operating_mode = 3,
-  //   .target_position = 0,
-  //   .actual_position = 0,
-  //   .target_velocity = 0,
-  //   .actual_velocity = 0,
-  //   .control_word = 0,
-  //   .status_word = 0,
-  //   .temperature = 25,
-  //   .error_history = {0}
-  // };
-
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -225,7 +234,7 @@ int main(void)
     canopen_pdo_data_t pdo_data = {0};
     pdo_data.word1 = 12345;
 
-    canopen_sdo_read_8(&canopen_client, &sdo_client, 1, 0);
+    canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1000, 0);
 
     canopen_process_rx(&canopen_server);
     canopen_process_tx(&canopen_server);
