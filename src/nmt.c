@@ -75,5 +75,5 @@ canopen_state_t canopen_transmite_nmt_bootup(canopen_msg_t *msg)
     if (msg->frame.nmt.node_id == 0)
         return CANOPEN_ERROR;
 
-    msg->id = NMT_STATE_BOOTUP;
+    // msg->id = NMT_STATE_BOOTUP;
 }
