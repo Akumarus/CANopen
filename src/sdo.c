@@ -44,7 +44,7 @@ canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg,
 {
   assert(canopen != NULL);
   assert(msg != NULL);
-  assert(msg->node != NULL);
+  // assert(msg->node != NULL); // TODO надо вернуть!
 
   msg->frame.sdo.cmd = cmd;
   msg->frame.sdo.index = index;
@@ -118,7 +118,7 @@ static canopen_state_t canopen_server_process_sdo_upload_initiate(canopen_t *can
   else if (data_size <= 4)
     object_dictionary_read(msg->frame.sdo.index, msg->frame.sdo.sub_index, &msg->frame.sdo.data, sizeof(uint32_t));
   SDO_SET_SERVER_ID(msg);
-  return canopen_sdo_transmit(canopen, msg, SDO_RESP_UPLOAD_DATA, msg->frame.sdo.index, msg->frame.sdo.sub_index, msg->frame.sdo.data);
+  // return canopen_sdo_transmit(canopen, msg, SDO_RESP_UPLOAD_DATA, msg->frame.sdo.index, msg->frame.sdo.sub_index, msg->frame.sdo.data);
 }
 
 static canopen_state_t canopen_server_process_download_expedited(canopen_t *canopen, canopen_msg_t *msg)
@@ -126,13 +126,13 @@ static canopen_state_t canopen_server_process_download_expedited(canopen_t *cano
   uint8_t data_size = SDO_GET_SIZE_FROM_CMD(msg);
   object_dictionary_write(msg->frame.sdo.index, msg->frame.sdo.sub_index, &msg->frame.sdo.data, data_size);
   SDO_SET_SERVER_ID(msg);
-  return canopen_sdo_transmit(canopen, msg, SDO_RESP_DOWNLOAD_OK, msg->frame.sdo.index, msg->frame.sdo.sub_index, 0);
+  // return canopen_sdo_transmit(canopen, msg, SDO_RESP_DOWNLOAD_OK, msg->frame.sdo.index, msg->frame.sdo.sub_index, 0);
 }
 
 static canopen_state_t canopen_server_send_abort(canopen_t *canopen, canopen_msg_t *msg, uint32_t abort_code)
 {
   msg->id = (msg->id - SDO_TX) + SDO_RX;
-  return canopen_sdo_transmit(canopen, msg, SDO_REQ_ABORT, msg->frame.sdo.index, msg->frame.sdo.sub_index, abort_code);
+  // return canopen_sdo_transmit(canopen, msg, SDO_REQ_ABORT, msg->frame.sdo.index, msg->frame.sdo.sub_index, abort_code);
 }
 
 static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id)

@@ -85,7 +85,7 @@ canopen_state_t canopen_process_tx(canopen_t *canopen)
   canopen_msg_t msg = {0};
   if (fifo_pop(&canopen->fifo_tx, &msg) == FIFO_OK)
   {
-    port_can_send(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row.data);
+    port_can_send(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row);
     if (msg.type == TYPE_PDO1_TX)
       canopen->info.tx_sended_pdo_count++;
     return CANOPEN_OK;
@@ -187,7 +187,7 @@ canopen_state_t canopen_get_msg_from_handler(canopen_msg_t *msg, uint32_t fifo)
   assert(msg != NULL);
   assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
 
-  if (port_can_receive_message(&msg->id, msg->frame.row.data, &msg->dlc, fifo))
+  if (port_can_receive_message(&msg->id, msg->frame.row, &msg->dlc, fifo))
   {
     msg->type = canopen_msg_type_from_id(msg->id);
   }

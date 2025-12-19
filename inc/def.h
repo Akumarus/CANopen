@@ -109,14 +109,8 @@ typedef struct
 #pragma pack(push, 1)
 typedef union
 {
-  struct
-  {
-    uint8_t data[COB_SIZE_PDO]; // 1-8 байт
-  } row;
-  struct
-  {
-    canopen_pdo_data_t data; // 1-8 байт
-  } pdo;
+  uint8_t row[COB_SIZE_PDO];
+  canopen_pdo_data_t pdo;
   canopen_sdo_data_t sdo;
 } cob_frame_t;
 #pragma pack(pop)

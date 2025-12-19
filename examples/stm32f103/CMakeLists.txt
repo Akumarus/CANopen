@@ -50,7 +50,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/pdo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/sdo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/obj.c
-    # Add user sources here
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/nmt.c
 )
 
 # Add include paths
