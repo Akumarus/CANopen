@@ -2,7 +2,6 @@
 #include "obj.h"
 #include "port.h"
 
-static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id);
 static canopen_state_t canopen_server_process_sdo_upload_initiate(canopen_t *canopen, canopen_msg_t *msg);
 static canopen_state_t canopen_server_process_download_expedited(canopen_t *canopen, canopen_msg_t *msg);
 static canopen_state_t canopen_server_send_abort(canopen_t *canopen, canopen_msg_t *msg, uint32_t abort_code);
@@ -133,14 +132,4 @@ static canopen_state_t canopen_server_send_abort(canopen_t *canopen, canopen_msg
 {
   msg->id = (msg->id - SDO_TX) + SDO_RX;
   // return canopen_sdo_transmit(canopen, msg, SDO_REQ_ABORT, msg->frame.sdo.index, msg->frame.sdo.sub_index, abort_code);
-}
-
-static canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id)
-{
-  for (uint8_t i = 0; i < NODES_COUNT; i++)
-  {
-    if (canopen->node[i].id == node_id)
-      return &canopen->node[i];
-  }
-  return NULL;
 }

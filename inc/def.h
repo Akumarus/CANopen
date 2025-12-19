@@ -18,7 +18,7 @@
 
 typedef enum
 {
-  NMT_BROADCAST = 0x000,
+  NMT = 0x000,
   SYNC_MESSAGE = 0x080,
   EMERGENCY_START = 0x080,
   TIME_MESSAGE = 0x100,
@@ -106,10 +106,17 @@ typedef struct
   uint32_t data;     // 5-8 байты
 } canopen_sdo_data_t;
 
+typedef struct
+{
+  uint8_t cmd;
+  uint8_t node_id;
+} canopen_nmt_data_t;
+
 #pragma pack(push, 1)
 typedef union
 {
   uint8_t row[COB_SIZE_PDO];
+  canopen_nmt_data_t nmt;
   canopen_pdo_data_t pdo;
   canopen_sdo_data_t sdo;
 } cob_frame_t;
@@ -127,6 +134,15 @@ typedef union
   } bit;
 } timeout_staus_t;
 
+typedef enum
+{
+  NMT_STATE_BOOTUP = 0x00,
+  NMT_STATE_STOPPED = 0x04,
+  NMT_STATE_OPERATIONAL = 0x05,
+  NMT_STATE_PRE_OPERATIONAL = 0x7F,
+  NMT_STATE_UNKNOWN = 0xFF,
+} canopen_nmt_state_t;
+
 typedef struct
 {
   uint8_t id;
@@ -134,6 +150,7 @@ typedef struct
   uint32_t pdo_timestamp;
   uint32_t sdo_timestamp;
   uint32_t nmt_timestamp;
+  canopen_nmt_state_t nmt_state; // TODO расширить и на PDO + SDO
 } canopen_node_t;
 
 typedef struct

@@ -119,6 +119,7 @@ canopen_state_t canopen_get_msg_from_handler(canopen_msg_t *msg, uint32_t fifo);
 canopen_state_t canopen_send_msg_to_fifo_rx(canopen_t *canopen, canopen_msg_t *msg);
 // void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t mask, uint8_t fifo); // TODO
 canopen_state_t is_valid_fifo(canopen_t *canopen, uint8_t fifo);
+canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id);
 uint8_t canopen_get_node_id(canopen_msg_t *msg);
 
 #endif // CAN_OPEN_H

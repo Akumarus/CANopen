@@ -246,6 +246,16 @@ static uint8_t find_free_bank(canopen_t *canopen, uint16_t id, uint8_t fifo)
   return bank_num;
 }
 
+canopen_node_t *get_node_index(canopen_t *canopen, uint8_t node_id)
+{
+  for (uint8_t i = 0; i < NODES_COUNT; i++)
+  {
+    if (canopen->node[i].id == node_id)
+      return &canopen->node[i];
+  }
+  return NULL;
+}
+
 static canopen_state_t is_callback_register(canopen_t *canopen, uint32_t id)
 {
   for (uint8_t i = 0; i < canopen->info.callbacks_count; i++)
