@@ -23,7 +23,9 @@ typedef struct
   uint32_t error_history[4];
 } device_data_t;
 
+#define OBJECT_DICTIONARY_SIZE 4
+
 extern device_data_t device_data;
-extern od_type object_dictionary[3];
-#define OBJECT_DICTIONARY_SIZE 3
+extern od_type object_dictionary[OBJECT_DICTIONARY_SIZE];
+
 #endif // PARAMS_H

@@ -87,7 +87,8 @@ od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
     /* -------------------------------------------------------------------------------------------------------------------------- */
     {"Error register  ", 0x1000, 0x00, OD_TYPE_UINT32, OD_RO, &device_data.error_register, {0}, {.u32 = 0xFFFFFFFF}},
     {"Error history[0]", 0x1001, 0x00, OD_TYPE_INT8, OD_RO, &device_data.error_history[0], {0}, {.i8 = 127}},
-    {"Device Name     ", 0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name, {0}, {0}}};
+    {"Device Name     ", 0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name, {0}, {0}},
+    {"Heartbeat_time  ", 0x1010, 0x00, OD_TYPE_UINT32, OD_RO, &device_data.heartbeat_time, {0}, {.u32 = 0xFFFFFFFF}}};
 
 canopen_t canopen_client;
 canopen_t canopen_server;
@@ -136,7 +137,6 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
 void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg)
 {
-  uint8_t lol = 0;
 }
 
 canopen_msg_t sdo_client;
@@ -231,10 +231,10 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    canopen_pdo_data_t pdo_data = {0};
-    pdo_data.word1 = 12345;
+    // canopen_pdo_data_t pdo_data = {0};
+    // pdo_data.word1 = 12345;
 
-    canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1000, 0);
+    canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1010, 0);
 
     canopen_process_rx(&canopen_server);
     canopen_process_tx(&canopen_server);

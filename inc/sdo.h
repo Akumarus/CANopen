@@ -4,19 +4,6 @@
 #include "def.h"
 #include "can_open.h"
 
-// typedef enum
-// {
-//   SDO_STATE_IDLE = 0,
-//   SDO_STATE_WAIT_RESPONSE,
-//   SDO_STATE_SEGMENTED_IN_PROGRESS,
-//   SDO_STATE_COMPLETED,
-//   SDO_STATE_ERROR,
-//   SDO_STATE_WAIT_RETRY,
-//   SDO_STATE_RETRY_SENDING,
-//   SDO_STATE_SERVER_PROCESSING,
-//   SDO_STATE_SERVER_WAIT_SEGMENT,
-// } sdo_state_t;
-
 /*
  * Формат команды SDO (биты 7-0):
  *
@@ -68,62 +55,61 @@
 
 typedef enum
 {
-  // === КЛИЕНТ --> СЕРВЕР (запросы) ===
-  SDO_CLIENT_INITIATE_DOWNLOAD = 0x20, // 0010 0000 - Начало записи
-  SDO_CLIENT_INITIATE_UPLOAD = 0x40,   // 0100 0000 - Начало чтения
-
-  // Expedited записи (данные сразу в первом сообщении)
-  SDO_CLIENT_WRITE_1BYTE = 0x2F, // 0010 1111 (expedited + size + n=3)
-  SDO_CLIENT_WRITE_2BYTE = 0x2B, // 0010 1011 (expedited + size + n=2)
-  SDO_CLIENT_WRITE_3BYTE = 0x27, // 0010 0111 (expedited + size + n=1)
-  SDO_CLIENT_WRITE_4BYTE = 0x23, // 0010 0011 (expedited + size + n=0)
-
-  // Сегментированные передачи
-  SDO_CLIENT_DOWNLOAD_SEGMENT = 0x00, // 0000 0000 - Сегмент данных для записи
-  SDO_CLIENT_UPLOAD_SEGMENT = 0x60,   // 0110 0000 - Запрос следующего сегмента чтения
-
-  // === СЕРВЕР → КЛИЕНТ (ответы) ===
-  SDO_SERVER_INITIATE_DOWNLOAD_RESP = 0x60, // 0110 0000 - Подтверждение начала записи
-  SDO_SERVER_INITIATE_UPLOAD_RESP = 0x40,   // 0100 0000 - Ответ с данными при чтении
-  SDO_SERVER_DOWNLOAD_SEGMENT_RESP = 0x20,  // 0010 0000 - Подтверждение сегмента записи
-  SDO_SERVER_UPLOAD_SEGMENT_RESP = 0x00,    // 0000 0000 - Сегмент данных при чтении
-
-  // === ОБЩИЕ ===
-  SDO_ABORT_TRANSFER = 0x80, // 1000 0000 - Прерывание передачи
-
-  // === ФЛАГИ (для сборки команд) ===
-  SDO_EXPEDITED_BIT = 0x02,      // Бит expedited
-  SDO_SIZE_INDICATED_BIT = 0x01, // Бит указания размера
-  SDO_TOGGLE_BIT = 0x10,         // Бит toggle для сегментированной передачи
-
-  // Маски размера данных (n)
-  SDO_SIZE_N_MASK = 0x0C,  // Маска битов n (3-2)
-  SDO_SIZE_N_0BYTE = 0x00, // n=0 (4 байта данных)
-  SDO_SIZE_N_1BYTE = 0x04, // n=1 (3 байта данных)
-  SDO_SIZE_N_2BYTE = 0x08, // n=2 (2 байта данных)
-  SDO_SIZE_N_3BYTE = 0x0C, // n=3 (1 байт данных)
+  /** Основные команды ----------------------------------------------*/
+  SDO_REQ_INITIATE_DOWNLOAD = 0x20, // 0010 0000 - Начало записи
+  SDO_REQ_INITIATE_UPLOAD = 0x40,   // 0100 0000 - Начало чтения
+  SDO_REQ_DOWNLOAD_SEGMENT = 0x00,
+  SDO_REQ_UPLOAD_SEGMENT = 0x60,
+  SDO_REQ_ABORT = 0x80,
+  /** Команды Expedited Write ---------------------------------------*/
+  SDO_REQ_WRITE_1BYTE = 0x2F, // 0010 1111 (expedited + size + n=3)
+  SDO_REQ_WRITE_2BYTE = 0x2B, // 0010 1011 (expedited + size + n=2)
+  SDO_REQ_WRITE_3BYTE = 0x27, // 0010 0111 (expedited + size + n=1)
+  SDO_REQ_WRITE_4BYTE = 0x23, // 0010 0011 (expedited + size + n=0)
+  /** Ответы сервера ------------------------------------------------*/
+  SDO_RESP_DOWNLOAD_OK = 0x60,
+  SDO_RESP_UPLOAD_DATA = 0x40,
+  /** Флаги ---------------------------------------------------------*/
+  SDO_FLAG_SIZE_INDICATED = 0x01, // Бит указания размера
+  SDO_FLAG_EXPEDITED = 0x02,      // Бит expedited
+  SDO_FLAG_TOGGLE = 0x10,
+  SDO_SIZE_N_MASK = 0x0C,
 } sdo_cmd_t;
 
+typedef enum
+{
+  SDO_ABORT_TOGGLE_BIT = 0x05030000,
+  SDO_ABORT_TIMEOUT = 0x05040000,
+  SDO_ABORT_INVALID_CS = 0x05040001,
+  SDO_ABORT_READONLY = 0x06010002,
+  SDO_ABORT_WRITEONLY = 0x06010003,
+  SDO_ABORT_OBJ_NOT_EXIST = 0x06020000,
+  SDO_ABORT_SUB_NOT_EXIST = 0x06090011,
+  SDO_ABORT_INVALID_VALUE = 0x06090030,
+  SDO_ABORT_VALUE_TOO_HIGH = 0x06090032,
+  SDO_ABORT_VALUE_TOO_LOW = 0x06090036,
+  SDO_ABORT_GENERAL = 0x08000000,
+} canopen_abort_code_t;
+
+/**  Запросы прервать операцию  ------------------------------------------------*/
 #define canopen_sdo_abort(canopen, msg, index, sub_index, abort_code) \
-  canopen_sdo_transmit(canopen, msg, SDO_ABORT_TRANSFER, index, sub_index, abort_code);
+  canopen_sdo_transmit(canopen, msg, SDO_REQ_ABORT, index, sub_index, abort_code)
 
+/**  Запросы на запись в od 8/16/32 бит ----------------------------------------*/
 #define canopen_sdo_write_32(canopen, msg, index, sub_index, data) \
-  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_4BYTE, index, sub_index, data)
-
+  canopen_sdo_transmit(canopen, msg, SDO_REQ_WRITE_4BYTE, index, sub_index, data)
 #define canopen_sdo_write_16(canopen, msg, index, sub_index, data) \
-  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_2BYTE, index, sub_index, data)
-
+  canopen_sdo_transmit(canopen, msg, SDO_REQ_WRITE_2BYTE, index, sub_index, data)
 #define canopen_sdo_write_8(canopen, msg, index, sub_index, data) \
-  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_WRITE_1BYTE, index, sub_index, data)
+  canopen_sdo_transmit(canopen, msg, SDO_REQ_WRITE_1BYTE, index, sub_index, data)
 
+/**  Запросы на чтение из od 8/16/32 бит ----------------------------------------*/
 #define canopen_sdo_read_32(canopen, msg, index, sub_index) \
-  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0)
-
+  canopen_sdo_transmit(canopen, msg, SDO_REQ_INITIATE_UPLOAD, index, sub_index, 0)
 #define canopen_sdo_read_16(canopen, msg, index, sub_index) \
-  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0);
-
+  canopen_sdo_transmit(canopen, msg, SDO_REQ_INITIATE_UPLOAD, index, sub_index, 0)
 #define canopen_sdo_read_8(canopen, msg, index, sub_index) \
-  canopen_sdo_transmit(canopen, msg, SDO_CLIENT_INITIATE_UPLOAD, index, sub_index, 0);
+  canopen_sdo_transmit(canopen, msg, SDO_REQ_INITIATE_UPLOAD, index, sub_index, 0)
 
 canopen_state_t canopen_sdo_config(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id, canopen_callback callback);
 canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg, uint8_t cmd, uint16_t index, uint8_t sub_index, uint32_t data);
