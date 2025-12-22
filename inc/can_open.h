@@ -108,6 +108,7 @@ typedef struct
   canopen_msg_t buffer_rx[CAN_FIFO_SIZE];
   filter_bank_t bank_list[MAX_BANK_COUNT];
   canopen_handler_t callbacks[MAX_CALLBACKS];
+  canopen_nmt_state_t nmt_state;
 } canopen_t;
 
 canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint8_t node_id, uint32_t ide);

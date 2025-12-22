@@ -28,7 +28,7 @@ typedef enum
   PDO4 = 0x480,
   SDO_RX = 0x580,
   SDO_TX = 0x600,
-  HEARTBIT_START = 0x700,
+  HEARTBIT = 0x700,
   LSS_TX = 0x7E4, // TODO Посмотреть, что это
   LSS_RX = 0x7E5,
 } canopen_fc_t;
@@ -55,6 +55,24 @@ typedef enum
   TYPE_LSS_TX,
   TYPE_LSS_RX,
 } msg_type_t;
+
+typedef enum
+{
+  NMT_STATE_BOOTUP = 0x00,
+  NMT_STATE_STOPPED = 0x04,
+  NMT_STATE_OPERATIONAL = 0x05,
+  NMT_STATE_PRE_OPERATIONAL = 0x7F,
+  NMT_STATE_RESETING = 0x80
+} canopen_nmt_state_t;
+
+typedef enum
+{
+  NMT_CS_START_REMOTE_NODE = 0x01,
+  NMT_CS_STOP_REMOTE_NODE = 0x02,
+  NMT_CS_ENTER_PRE_OPERATION = 0x80,
+  NMT_CS_RESET_NODE = 0x81,
+  NMT_CS_RESET_COMMUNICATION = 0x82,
+} canopen_nmt_cmd_t;
 
 typedef enum
 {
@@ -134,15 +152,6 @@ typedef union
   } bit;
 } timeout_staus_t;
 
-typedef enum
-{
-  NMT_STATE_BOOTUP = 0x00,
-  NMT_STATE_STOPPED = 0x04,
-  NMT_STATE_OPERATIONAL = 0x05,
-  NMT_STATE_PRE_OPERATIONAL = 0x7F,
-  NMT_STATE_UNKNOWN = 0xFF,
-} canopen_nmt_state_t;
-
 typedef struct
 {
   uint8_t id;
@@ -150,7 +159,7 @@ typedef struct
   uint32_t pdo_timestamp;
   uint32_t sdo_timestamp;
   uint32_t nmt_timestamp;
-  canopen_nmt_state_t nmt_state; // TODO расширить и на PDO + SDO
+  // canopen_nmt_state_t nmt_state; // TODO расширить и на PDO + SDO
 } canopen_node_t;
 
 typedef struct
