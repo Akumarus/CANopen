@@ -2,27 +2,23 @@
 #include "obj.h"
 #include "port.h"
 
-static canopen_state_t canopen_server_process_sdo_upload_initiate(canopen_t *canopen,
-                                                                  canopen_msg_t *msg);
-static canopen_state_t canopen_server_process_download_expedited(canopen_t *canopen,
-                                                                 canopen_msg_t *msg);
-static canopen_state_t canopen_server_send_abort(canopen_t *canopen, canopen_msg_t *msg,
-                                                 uint32_t abort_code);
+static co_res_t co_sdo_upload(co_obj_t *canopen, co_msg_t *msg);
+static co_res_t co_sdo_download(co_obj_t *canopen, co_msg_t *msg);
+static co_res_t co_sdo_abort(co_obj_t *canopen, co_msg_t *msg, uint32_t abort_code);
 
 #define SDO_DEFAULT_TIMEOUT_MS 1000
 #define SDO_GET_SIZE_FROM_CMD(msg) 4 - ((msg->frame.sdo.cmd & SDO_SIZE_N_MASK) >> 2)
 #define SDO_SET_SERVER_ID(msg) ((msg)->id = ((msg)->id - SDO_TX) + SDO_RX)
 
-__attribute__((weak)) void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg) {}
+__attribute__((weak)) void canopen_sdo_callback(co_obj_t *canopen, co_msg_t *msg) {}
 
-canopen_state_t canopen_sdo_config(canopen_t *canopen, canopen_msg_t *msg, uint8_t node_id,
-                                   canopen_callback callback)
+co_res_t co_sdo_config(co_obj_t *canopen, co_msg_t *msg, uint8_t node_id, co_hdl_t callback)
 {
     assert(canopen != NULL);
     assert(msg != NULL);
     assert(node_id < 128);
 
-    memset(msg, 0, sizeof(canopen_msg_t));
+    memset(msg, 0, sizeof(co_msg_t));
 
     msg->id = (canopen->role == CANOPEN_CLIENT) ? SDO_TX : SDO_RX;
     msg->id += node_id;
@@ -39,8 +35,8 @@ canopen_state_t canopen_sdo_config(canopen_t *canopen, canopen_msg_t *msg, uint8
     return canopen_config_callback(canopen, id, 1, callback);
 }
 
-canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg, uint8_t cmd,
-                                     uint16_t index, uint8_t sub_index, uint32_t data)
+co_res_t co_sdo_send(co_obj_t *canopen, co_msg_t *msg, uint8_t cmd, uint16_t index,
+                     uint8_t sub_index, uint32_t data)
 {
     assert(canopen != NULL);
     assert(msg != NULL);
@@ -59,7 +55,7 @@ canopen_state_t canopen_sdo_transmit(canopen_t *canopen, canopen_msg_t *msg, uin
     return (fifo_state == FIFO_FULL) ? CANOPEN_ERROR : CANOPEN_OK;
 }
 
-canopen_state_t canopen_client_process_sdo(canopen_t *canopen, canopen_msg_t *msg)
+co_res_t co_proc_sdo_tx(co_obj_t *canopen, co_msg_t *msg)
 {
     if (!msg->node->status.bit.sdo_pending)
         return CANOPEN_ERROR;
@@ -82,18 +78,18 @@ canopen_state_t canopen_client_process_sdo(canopen_t *canopen, canopen_msg_t *ms
     return CANOPEN_OK;
 }
 
-canopen_state_t canopen_server_process_sdo(canopen_t *canopen, canopen_msg_t *msg)
+co_res_t canopen_server_process_sdo(co_obj_t *canopen, co_msg_t *msg)
 {
     switch (msg->frame.sdo.cmd) {
     case SDO_REQ_INITIATE_UPLOAD:
-        canopen_server_process_sdo_upload_initiate(canopen, msg);
+        co_sdo_upload(canopen, msg);
         break;
 
     case SDO_REQ_WRITE_1BYTE:
     case SDO_REQ_WRITE_2BYTE:
     case SDO_REQ_WRITE_3BYTE:
     case SDO_REQ_WRITE_4BYTE:
-        canopen_server_process_download_expedited(canopen, msg);
+        co_sdo_download(canopen, msg);
         break;
 
     case SDO_REQ_ABORT:
@@ -101,19 +97,18 @@ canopen_state_t canopen_server_process_sdo(canopen_t *canopen, canopen_msg_t *ms
         break;
 
     default:
-        canopen_server_send_abort(canopen, msg, SDO_ABORT_INVALID_CS);
+        co_sdo_abort(canopen, msg, SDO_ABORT_INVALID_CS);
         break;
     }
 
     return CANOPEN_OK;
 }
 
-static canopen_state_t canopen_server_process_sdo_upload_initiate(canopen_t *canopen,
-                                                                  canopen_msg_t *msg)
+static co_res_t co_sdo_upload(co_obj_t *canopen, co_msg_t *msg)
 {
     uint16_t data_size = object_dictionary_get_size(msg->frame.sdo.index, msg->frame.sdo.sub_index);
     if (data_size == 0)
-        return canopen_server_send_abort(canopen, msg, SDO_ABORT_OBJ_NOT_EXIST);
+        return co_sdo_abort(canopen, msg, SDO_ABORT_OBJ_NOT_EXIST);
     else if (data_size <= 4)
         object_dictionary_read(msg->frame.sdo.index, msg->frame.sdo.sub_index, &msg->frame.sdo.data,
                                sizeof(uint32_t));
@@ -122,8 +117,7 @@ static canopen_state_t canopen_server_process_sdo_upload_initiate(canopen_t *can
     // msg->frame.sdo.index, msg->frame.sdo.sub_index, msg->frame.sdo.data);
 }
 
-static canopen_state_t canopen_server_process_download_expedited(canopen_t *canopen,
-                                                                 canopen_msg_t *msg)
+static co_res_t co_sdo_download(co_obj_t *canopen, co_msg_t *msg)
 {
     uint8_t data_size = SDO_GET_SIZE_FROM_CMD(msg);
     object_dictionary_write(msg->frame.sdo.index, msg->frame.sdo.sub_index, &msg->frame.sdo.data,
@@ -133,8 +127,7 @@ static canopen_state_t canopen_server_process_download_expedited(canopen_t *cano
     // msg->frame.sdo.index, msg->frame.sdo.sub_index, 0);
 }
 
-static canopen_state_t canopen_server_send_abort(canopen_t *canopen, canopen_msg_t *msg,
-                                                 uint32_t abort_code)
+static co_res_t co_sdo_abort(co_obj_t *canopen, co_msg_t *msg, uint32_t abort_code)
 {
     msg->id = (msg->id - SDO_TX) + SDO_RX;
     // return canopen_sdo_transmit(canopen, msg, SDO_REQ_ABORT,

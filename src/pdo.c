@@ -7,7 +7,7 @@
 #define PDO_TX_TYPE(pdo_num) ((msg_type_t)(TYPE_PDO1_TX + ((pdo_num) - 1)))
 #define PDO_RX_TYPE(pdo_num) ((msg_type_t)(TYPE_PDO1_RX + ((pdo_num) - 1)))
 
-canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen_pdo_data_t *data)
+co_res_t canopen_send_pdo(co_obj_t *canopen, co_msg_t *msg, canopen_pdo_data_t *data)
 {
     assert(canopen != NULL);
     assert(data != NULL);
@@ -26,8 +26,8 @@ canopen_state_t canopen_send_pdo(canopen_t *canopen, canopen_msg_t *msg, canopen
     return CANOPEN_OK;
 }
 
-canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, pdo_number_t pdo_num, uint8_t node_id,
-                                      canopen_msg_t *msg, uint8_t dlc)
+co_res_t canopen_config_pdo_tx(co_obj_t *canopen, pdo_number_t pdo_num, uint8_t node_id,
+                               co_msg_t *msg, uint8_t dlc)
 {
     assert(canopen != NULL);
     assert(msg != NULL);
@@ -47,8 +47,8 @@ canopen_state_t canopen_config_pdo_tx(canopen_t *canopen, pdo_number_t pdo_num, 
     return CANOPEN_OK;
 }
 
-canopen_state_t canopen_config_pdo_rx(canopen_t *canopen, pdo_number_t pdo_num, uint8_t node_id,
-                                      canopen_callback callback)
+co_res_t canopen_config_pdo_rx(co_obj_t *canopen, pdo_number_t pdo_num, uint8_t node_id,
+                               co_hdl_t callback)
 {
     assert(canopen != NULL);
     assert(callback != NULL);

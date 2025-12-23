@@ -19,18 +19,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "can.h"
-#include "tim.h"
 #include "gpio.h"
+#include "tim.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "can_open.h"
-#include "obj.h"
-#include "pdo.h"
-#include "sdo.h"
 #include "fifo.h"
-#include "port.h"
+#include "obj.h"
 #include "params.h"
+#include "pdo.h"
+#include "port.h"
+#include "sdo.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -63,35 +64,58 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-device_data_t device_data = {
-    .error_register = 0,
-    .node_id = 1,
-    .heartbeat_time = 1000,
-    .device_name = "MY_CANOPEN_DEVICE",
-    .serial_number = 0x12345678,
-    .product_code = 0xABCD,
-    .baudrate = 250,
-    .operating_mode = 3,
-    .target_position = 0,
-    .actual_position = 0,
-    .target_velocity = 0,
-    .actual_velocity = 0,
-    .control_word = 0,
-    .status_word = 0,
-    .temperature = 25,
-    .error_history = {0}};
+device_data_t device_data = {.error_register = 0,
+                             .node_id = 1,
+                             .heartbeat_time = 1000,
+                             .device_name = "MY_CANOPEN_DEVICE",
+                             .serial_number = 0x12345678,
+                             .product_code = 0xABCD,
+                             .baudrate = 250,
+                             .operating_mode = 3,
+                             .target_position = 0,
+                             .actual_position = 0,
+                             .target_velocity = 0,
+                             .actual_velocity = 0,
+                             .control_word = 0,
+                             .status_word = 0,
+                             .temperature = 25,
+                             .error_history = {0}};
 
 od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
-    /* -------------------------------------------------------------------------------------------------------------------------- */
-    /* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer           | Min |        Max        |*/
-    /* -------------------------------------------------------------------------------------------------------------------------- */
-    {"Error register  ", 0x1000, 0x00, OD_TYPE_UINT32, OD_RO, &device_data.error_register, {0}, {.u32 = 0xFFFFFFFF}},
-    {"Error history[0]", 0x1001, 0x00, OD_TYPE_INT8, OD_RO, &device_data.error_history[0], {0}, {.i8 = 127}},
+    /* --------------------------------------------------------------------------------------------------------------------------
+     */
+    /* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer | Min |
+       Max        |*/
+    /* --------------------------------------------------------------------------------------------------------------------------
+     */
+    {"Error register  ",
+     0x1000,
+     0x00,
+     OD_TYPE_UINT32,
+     OD_RO,
+     &device_data.error_register,
+     {0},
+     {.u32 = 0xFFFFFFFF}},
+    {"Error history[0]",
+     0x1001,
+     0x00,
+     OD_TYPE_INT8,
+     OD_RO,
+     &device_data.error_history[0],
+     {0},
+     {.i8 = 127}},
     {"Device Name     ", 0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name, {0}, {0}},
-    {"Heartbeat_time  ", 0x1010, 0x00, OD_TYPE_UINT32, OD_RO, &device_data.heartbeat_time, {0}, {.u32 = 0xFFFFFFFF}}};
+    {"Heartbeat_time  ",
+     0x1010,
+     0x00,
+     OD_TYPE_UINT32,
+     OD_RO,
+     &device_data.heartbeat_time,
+     {0},
+     {.u32 = 0xFFFFFFFF}}};
 
-canopen_t canopen_client;
-canopen_t canopen_server;
+co_obj_t canopen_client;
+co_obj_t canopen_server;
 
 #define NODE_ID_PLATE1 1
 #define NODE_ID_PLATE2 2
@@ -99,69 +123,63 @@ canopen_t canopen_server;
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-  // TODO нужно спрятать под капот определение инстанса
-  canopen_msg_t msg;
-  canopen_get_msg_from_handler(&msg, CAN_RX_FIFO0);
-  switch (canopen_get_node_id(&msg))
-  {
-  case NODE_ID_PLATE1:
-    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
-    break;
-  case NODE_ID_PLATE2:
-    canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
-    break;
-  default:
-    break;
-  }
+    // TODO нужно спрятать под капот определение инстанса
+    co_msg_t msg;
+    canopen_get_msg_from_handler(&msg, CAN_RX_FIFO0);
+    switch (canopen_get_node_id(&msg)) {
+    case NODE_ID_PLATE1:
+        canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
+        break;
+    case NODE_ID_PLATE2:
+        canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
+        break;
+    default:
+        break;
+    }
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
-  uint8_t node_id;
-  canopen_msg_t msg = {0};
-  canopen_get_msg_from_handler(&msg, CAN_RX_FIFO1);
-  node_id = canopen_get_node_id(&msg);
-  switch (node_id)
-  {
-  case NODE_ID_PLATE1:
-    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
+    uint8_t node_id;
+    co_msg_t msg = {0};
+    canopen_get_msg_from_handler(&msg, CAN_RX_FIFO1);
+    node_id = canopen_get_node_id(&msg);
+    switch (node_id) {
+    case NODE_ID_PLATE1:
+        canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
 
-    break;
-  case NODE_ID_PLATE2:
-    canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
-    break;
-  default:
-    break;
-  }
+        break;
+    case NODE_ID_PLATE2:
+        canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
+        break;
+    default:
+        break;
+    }
 }
 
-void canopen_sdo_callback(canopen_t *canopen, canopen_msg_t *msg)
-{
-}
+void canopen_sdo_callback(co_obj_t *canopen, co_msg_t *msg) {}
 
-canopen_msg_t sdo_client;
-canopen_msg_t sdo_server;
-canopen_msg_t pdo0;
-canopen_msg_t pdo1 = {0};
+co_msg_t sdo_client;
+co_msg_t sdo_server;
+co_msg_t pdo0;
+co_msg_t pdo1 = {0};
 
 uint32_t pdo0_id = 0x00000100;
 uint32_t pdo1_id = 0x00000200;
 
-void pdo1_callback(canopen_msg_t *msg)
+void pdo1_callback(co_msg_t *msg)
 {
-  // uint16_t lol = 0;
+    // uint16_t lol = 0;
 }
 
-void sdo_callback(canopen_msg_t *msg)
-{
-}
+void sdo_callback(co_msg_t *msg) {}
 
 void pdo22_send()
 {
-  // pdo1.frame.pdo.data[0] = 10;
-  // pdo2.frame.pdo.data[1] = 11;
-  // canopen_send_pdo(&canopen, &pdo1);
-  // canopen_send_pdo(&canopen, &pdo2);
+    // pdo1.frame.pdo.data[0] = 10;
+    // pdo2.frame.pdo.data[1] = 11;
+    // canopen_send_pdo(&canopen, &pdo1);
+    // canopen_send_pdo(&canopen, &pdo2);
 }
 
 // CAN_TxHeaderTypeDef txHeader;
@@ -174,79 +192,78 @@ void pdo22_send()
 int main(void)
 {
 
-  /* USER CODE BEGIN 1 */
+    /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
+    /* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+    /* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    HAL_Init();
 
-  /* USER CODE BEGIN Init */
-  /* USER CODE END Init */
+    /* USER CODE BEGIN Init */
+    /* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+    /* Configure the system clock */
+    SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+    /* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+    /* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_CAN_Init();
-  MX_TIM1_Init();
-  /* USER CODE BEGIN 2 */
-  /*CANopen CLIENT ========================================================================*/
-  canopen_init(&canopen_client, CANOPEN_CLIENT, NODE_ID_PLATE2, COB_ID_STD);
-  canopen_config_node_id(&canopen_client, NODE_ID_PLATE1);
+    /* Initialize all configured peripherals */
+    MX_GPIO_Init();
+    MX_CAN_Init();
+    MX_TIM1_Init();
+    /* USER CODE BEGIN 2 */
+    /*CANopen CLIENT ========================================================================*/
+    canopen_init(&canopen_client, CANOPEN_CLIENT, NODE_ID_PLATE2, COB_ID_STD);
+    canopen_config_node_id(&canopen_client, NODE_ID_PLATE1);
 
-  /* Конфигурация PDO сообщений */
-  canopen_config_pdo1_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
-  canopen_config_pdo2_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+    /* Конфигурация PDO сообщений */
+    canopen_config_pdo1_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+    canopen_config_pdo2_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
 
-  /* Конфигурация SDO сообщений */
-  canopen_sdo_config(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
-  /*=======================================================================================*/
+    /* Конфигурация SDO сообщений */
+    co_sdo_config(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
+    /*=======================================================================================*/
 
-  /*CANopen SERVER ========================================================================*/
-  canopen_init(&canopen_server, CANOPEN_SERVER, NODE_ID_PLATE1, COB_ID_STD);
-  canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
-  canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
-  canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
+    /*CANopen SERVER ========================================================================*/
+    canopen_init(&canopen_server, CANOPEN_SERVER, NODE_ID_PLATE1, COB_ID_STD);
+    canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
+    canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
+    canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
 
-  /* Конфигурация PDO сообщений */
-  canopen_config_pdo1_tx(&canopen_server, &pdo0, NODE_ID_PLATE2, 8);
-  canopen_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
+    /* Конфигурация PDO сообщений */
+    canopen_config_pdo1_tx(&canopen_server, &pdo0, NODE_ID_PLATE2, 8);
+    canopen_config_pdo2_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
 
-  /* Конфигурация SDO сообщений */
-  canopen_sdo_config(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
-  /*=======================================================================================*/
+    /* Конфигурация SDO сообщений */
+    co_sdo_config(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
+    /*=======================================================================================*/
 
-  HAL_TIM_Base_Start_IT(&htim1);
-  /* USER CODE END 2 */
+    HAL_TIM_Base_Start_IT(&htim1);
+    /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    // canopen_pdo_data_t pdo_data = {0};
-    // pdo_data.word1 = 12345;
+    /* Infinite loop */
+    /* USER CODE BEGIN WHILE */
+    while (1) {
+        // canopen_pdo_data_t pdo_data = {0};
+        // pdo_data.word1 = 12345;
 
-    canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1010, 0);
+        canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1010, 0);
 
-    canopen_process_rx(&canopen_server);
-    canopen_process_tx(&canopen_server);
+        canopen_process_rx(&canopen_server);
+        canopen_process_tx(&canopen_server);
 
-    canopen_process_rx(&canopen_client);
-    canopen_process_tx(&canopen_client);
-    HAL_Delay(500);
-    /* USER CODE END WHILE */
+        canopen_process_rx(&canopen_client);
+        canopen_process_tx(&canopen_client);
+        HAL_Delay(500);
+        /* USER CODE END WHILE */
 
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
+        /* USER CODE BEGIN 3 */
+    }
+    /* USER CODE END 3 */
 }
 
 /**
@@ -255,36 +272,35 @@ int main(void)
  */
 void SystemClock_Config(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+    RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+    RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-   * in the RCC_OscInitTypeDef structure.
-   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+    /** Initializes the RCC Oscillators according to the specified parameters
+     * in the RCC_OscInitTypeDef structure.
+     */
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+    RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+    RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+    RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+        Error_Handler();
+    }
 
-  /** Initializes the CPU, AHB and APB buses clocks
-   */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+    /** Initializes the CPU, AHB and APB buses clocks
+     */
+    RCC_ClkInitStruct.ClockType =
+        RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+    RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+    RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+    RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+    if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK) {
+        Error_Handler();
+    }
 }
 
 /* USER CODE BEGIN 4 */
@@ -297,13 +313,12 @@ void SystemClock_Config(void)
  */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
-  /* USER CODE END Error_Handler_Debug */
+    /* USER CODE BEGIN Error_Handler_Debug */
+    /* User can add his own implementation to report the HAL error return state */
+    __disable_irq();
+    while (1) {
+    }
+    /* USER CODE END Error_Handler_Debug */
 }
 #ifdef USE_FULL_ASSERT
 /**
@@ -315,9 +330,9 @@ void Error_Handler(void)
  */
 void assert_failed(uint8_t *file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
+    /* USER CODE BEGIN 6 */
+    /* User can add his own implementation to report the file name and line number,
+       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+    /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
