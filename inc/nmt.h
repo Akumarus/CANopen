@@ -4,57 +4,60 @@
 #include "can_open.h"
 #include "def.h"
 
-co_res_t canopen_server_transmite_heartbeat(co_obj_t *canopen);
-co_res_t canopen_client_transmite_nmt_cmd(co_obj_t *canopen, uint8_t node_id,
-                                          canopen_nmt_cmd_t cmd);
+co_res_t co_nmt_send_bootup(co_obj_t *co);
+co_res_t co_nmt_send_heartbeat(co_obj_t *co);
+co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd);
 
-inline co_res_t canopen_nmt_start_remote_node(co_obj_t *canopen, uint8_t node_id)
+// Короткие и понятные названия
+inline co_res_t co_nmt_start(co_obj_t *co, uint8_t id)
 {
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_START_REMOTE_NODE);
-}
-
-inline co_res_t canopen_nmt_stop_remote_node(co_obj_t *canopen, uint8_t node_id)
-{
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_STOP_REMOTE_NODE);
+    return co_nmt_send_cmd(co, id, NMT_CS_START);
 }
 
-inline co_res_t canopen_nmt_enter_pre_operation(co_obj_t *canopen, uint8_t node_id)
+inline co_res_t co_nmt_stop(co_obj_t *co, uint8_t id)
 {
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_ENTER_PRE_OPERATION);
-}
-inline co_res_t canopen_nmt_reset_node(co_obj_t *canopen, uint8_t node_id)
-{
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_RESET_NODE);
+    return co_nmt_send_cmd(co, id, NMT_CS_STOP);
 }
 
-inline co_res_t canopen_nmt_reset_communication(co_obj_t *canopen, uint8_t node_id)
+inline co_res_t co_nmt_preop(co_obj_t *co, uint8_t id)
 {
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_RESET_COMMUNICATION);
+    return co_nmt_send_cmd(co, id, NMT_CS_PREOP);
 }
 
-/** Broadcast nmt command --------------------------------------------------------------------*/
-inline co_res_t canopen_nmt_broadcast_start_remote_node(co_obj_t *canopen, uint8_t node_id)
+inline co_res_t co_nmt_reset(co_obj_t *co, uint8_t id)
 {
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_START_REMOTE_NODE);
+    return co_nmt_send_cmd(co, id, NMT_CS_RESET);
 }
 
-inline co_res_t canopen_nmt_broadcast_stop_remote_node(co_obj_t *canopen, uint8_t node_id)
+inline co_res_t co_nmt_com_reset(co_obj_t *co, uint8_t id)
 {
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_STOP_REMOTE_NODE);
+    return co_nmt_send_cmd(co, id, NMT_CS_COM_RESET);
 }
 
-inline co_res_t canopen_nmt_broadcast_enter_pre_operation(co_obj_t *canopen, uint8_t node_id)
+// Broadcast версии
+inline co_res_t co_nmt_bcast_start(co_obj_t *co)
 {
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_ENTER_PRE_OPERATION);
-}
-inline co_res_t canopen_nmt_broadcast_reset_node(co_obj_t *canopen, uint8_t node_id)
-{
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_RESET_NODE);
+    return co_nmt_send_cmd(co, 0, NMT_CS_START);
 }
 
-inline co_res_t canopen_nmt_broadcast_reset_communication(co_obj_t *canopen, uint8_t node_id)
+inline co_res_t co_nmt_bcast_stop(co_obj_t *co)
 {
-    return canopen_client_transmite_nmt_cmd(canopen, node_id, NMT_CS_RESET_COMMUNICATION);
+    return co_nmt_send_cmd(co, 0, NMT_CS_STOP);
+}
+
+inline co_res_t co_nmt_bcast_preop(co_obj_t *co)
+{
+    return co_nmt_send_cmd(co, 0, NMT_CS_PREOP);
+}
+
+inline co_res_t co_nmt_bcast_reset(co_obj_t *co)
+{
+    return co_nmt_send_cmd(co, 0, NMT_CS_RESET);
+}
+
+inline co_res_t co_nmt_bcast_com_reset(co_obj_t *co)
+{
+    return co_nmt_send_cmd(co, 0, NMT_CS_COM_RESET);
 }
 
 #endif // NMT_H

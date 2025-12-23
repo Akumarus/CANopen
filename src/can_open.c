@@ -3,34 +3,33 @@
 #include "port.h"
 #include "sdo.h"
 
-static co_res_t canopen_config_filter_list_16b(co_obj_t *canopen, uint32_t id, uint8_t fifo);
+static co_res_t co_cnf_filter_list_16b(co_obj_t *co, uint32_t id, uint8_t fifo);
 static uint8_t find_free_bank(co_obj_t *canopen, uint16_t id, uint8_t fifo);
 static co_res_t is_callback_register(co_obj_t *canopen, uint32_t id);
-static co_res_t is_valid_bank(co_obj_t *canopen, uint8_t bank);
-static msg_type_t canopen_msg_type_from_id(uint32_t id);
+static co_msg_type_t canopen_msg_type_from_id(uint32_t id);
 static void init_nodes(co_obj_t *canopen);
 static void init_filters(co_obj_t *canopen);
 static void init_fifo(co_obj_t *canopen);
 static void init_callbacks(co_obj_t *canopen);
 
-co_res_t canopen_init(co_obj_t *canopen, canopen_role_t role, uint8_t node_id, uint32_t ide)
+co_res_t co_init(co_obj_t *co, co_role_t role, uint8_t node_id, uint32_t ide)
 {
-    assert(canopen != NULL);
+    assert(co != NULL);
     assert((role == CANOPEN_CLIENT) || (role == CANOPEN_SERVER));
     assert(node_id < 128);
     assert(ide == COB_ID_STD);
 
-    canopen->ide = ide;
-    canopen->role = role;
-    canopen->node_id = node_id;
-    canopen->info.bank_count = 0;
-    canopen->info.status.all = 0;
-    canopen->info.callbacks_count = 0;
+    co->ide = ide;
+    co->role = role;
+    co->node_id = node_id;
+    co->info.bank_count = 0;
+    co->info.status.all = 0;
+    co->info.callbacks_count = 0;
 
-    init_fifo(canopen);
-    init_nodes(canopen);
-    init_filters(canopen);
-    init_callbacks(canopen);
+    init_fifo(co);
+    init_nodes(co);
+    init_filters(co);
+    init_callbacks(co);
     port_can_init();
 
     return CANOPEN_OK;
@@ -51,7 +50,8 @@ co_res_t canopen_config_node_id(co_obj_t *canopen, uint8_t node_id)
     return CANOPEN_ERROR; // TODO Добавить статус
 }
 
-co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback)
+co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo,
+                                 co_hdl_t callback)
 {
     assert(canopen != NULL);
     assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
@@ -65,7 +65,7 @@ co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, c
     canopen->callbacks[canopen->info.callbacks_count].callback = callback;
     canopen->info.callbacks_count++;
 
-    if (canopen_config_filter_list_16b(canopen, id, fifo) != CANOPEN_OK)
+    if (co_cnf_filter_list_16b(canopen, id, fifo) != CANOPEN_OK)
         return CANOPEN_ERROR;
 
     return CANOPEN_OK;
@@ -82,7 +82,8 @@ co_res_t canopen_process_tx(co_obj_t *canopen)
 
     co_msg_t msg = {0};
     if (fifo_pop(&canopen->fifo_tx, &msg) == FIFO_OK) {
-        port_can_send(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row);
+        port_can_send(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc,
+                      msg.frame.row);
         if (msg.type == TYPE_PDO1_TX)
             canopen->info.tx_sended_pdo_count++;
         return CANOPEN_OK;
@@ -102,7 +103,8 @@ co_res_t canopen_process_rx(co_obj_t *canopen)
 
         // // TODO Нужно вынести в отдельную функцию
         for (uint8_t i = 0; i < MAX_CALLBACKS; i++) {
-            if ((canopen->callbacks[i].id == msg.id) && (canopen->callbacks[i].callback != NULL)) {
+            if ((canopen->callbacks[i].id == msg.id) &&
+                (canopen->callbacks[i].callback != NULL)) {
                 canopen->callbacks[i].callback(&msg);
             }
         }
@@ -138,7 +140,7 @@ co_res_t canopen_check_timeouts(co_obj_t *canopen)
     uint32_t current_time = port_get_timestamp() - canopen->timestamp;
 
     for (uint8_t i = 0; i < NODES_COUNT; i++) {
-        canopen_node_t *node = &canopen->node[i];
+        co_node_t *node = &canopen->node[i];
 
         if (node->id == 0xFF) // TODO задачть через дефайн или переменную
             break;
@@ -191,24 +193,18 @@ uint8_t canopen_get_node_id(co_msg_t *msg)
     return cobid & 0x7F;
 }
 
-static co_res_t canopen_config_filter_list_16b(co_obj_t *canopen, uint32_t id, uint8_t fifo)
+static co_res_t co_cnf_filter_list_16b(co_obj_t *co, uint32_t id, uint8_t fifo)
 {
-    uint8_t bank_num = find_free_bank(canopen, id, fifo);
-
-    if (is_valid_bank(canopen, bank_num) != CANOPEN_OK)
-        return CANOPEN_ERROR;
+    uint8_t num = find_free_bank(co, id, fifo);
 
     canopen_filter_t filter = {0};
-    filter.bank = bank_num;
+    filter.bank = num;
     filter.mode = COB_FILTERMODE_IDLIST;
     filter.scale = COB_FILTERSCALE_16BIT;
-    filter.id_high = canopen->bank_list[bank_num].ids[0];
-    filter.id_low =
-        (canopen->bank_list[bank_num].used_count > 1) ? canopen->bank_list[bank_num].ids[1] : 0;
-    filter.mask_high =
-        (canopen->bank_list[bank_num].used_count > 2) ? canopen->bank_list[bank_num].ids[2] : 0;
-    filter.mask_low =
-        (canopen->bank_list[bank_num].used_count > 3) ? canopen->bank_list[bank_num].ids[3] : 0;
+    filter.id_high = co->banks[num].ids[0];
+    filter.id_low = (co->banks[num].used > 1) ? co->banks[num].ids[1] : 0;
+    filter.mask_high = (co->banks[num].used > 2) ? co->banks[num].ids[2] : 0;
+    filter.mask_low = (co->banks[num].used > 3) ? co->banks[num].ids[3] : 0;
     filter.fifo = fifo;
     filter.active = 1;
     filter.end_bank = MAX_BANK_COUNT;
@@ -217,18 +213,17 @@ static co_res_t canopen_config_filter_list_16b(co_obj_t *canopen, uint32_t id, u
     return CANOPEN_OK;
 }
 
-static uint8_t find_free_bank(co_obj_t *canopen, uint16_t id, uint8_t fifo)
+static uint8_t find_free_bank(co_obj_t *co, uint16_t id, uint8_t fifo)
 {
     uint8_t bank_num = 0xFF;
     for (uint8_t i = 0; i < MAX_BANK_COUNT; i++) {
-        if ((canopen->bank_list[i].fifo_assignment == fifo &&
-             canopen->bank_list[i].used_count < IDS_PER_BANK) ||
-            canopen->bank_list[i].used_count == 0) {
-            if (canopen->bank_list[i].fifo_assignment == 0xFF)
-                canopen->info.bank_count++;
-            canopen->bank_list[i].fifo_assignment = fifo;
-            canopen->bank_list[i].ids[canopen->bank_list[i].used_count] = id << 5;
-            canopen->bank_list[i].used_count++;
+        if ((co->banks[i].fifo == fifo && co->banks[i].used < IDS_PER_BANK) ||
+            co->banks[i].used == 0) {
+            if (co->banks[i].fifo == 0xFF)
+                co->info.bank_count++;
+            co->banks[i].fifo = fifo;
+            co->banks[i].ids[co->banks[i].used] = id << 5;
+            co->banks[i].used++;
             bank_num = i;
             break;
         }
@@ -236,7 +231,7 @@ static uint8_t find_free_bank(co_obj_t *canopen, uint16_t id, uint8_t fifo)
     return bank_num;
 }
 
-canopen_node_t *get_node_index(co_obj_t *canopen, uint8_t node_id)
+co_node_t *get_node_index(co_obj_t *canopen, uint8_t node_id)
 {
     for (uint8_t i = 0; i < NODES_COUNT; i++) {
         if (canopen->node[i].id == node_id)
@@ -248,7 +243,8 @@ canopen_node_t *get_node_index(co_obj_t *canopen, uint8_t node_id)
 static co_res_t is_callback_register(co_obj_t *canopen, uint32_t id)
 {
     for (uint8_t i = 0; i < canopen->info.callbacks_count; i++) {
-        if (canopen->callbacks[i].id == id && canopen->callbacks[i].callback == NULL)
+        if (canopen->callbacks[i].id == id &&
+            canopen->callbacks[i].callback == NULL)
             return CANOPEN_ERROR;
     }
     return CANOPEN_OK;
@@ -273,21 +269,23 @@ static void init_nodes(co_obj_t *canopen)
     }
 }
 
-static void init_filters(co_obj_t *canopen)
+static void init_filters(co_obj_t *co)
 {
     for (uint8_t i = 0; i < MAX_BANK_COUNT; i++)
-        canopen->bank_list[i].fifo_assignment = 0xFF;
+        co->banks[i].fifo = 0xFF;
 }
 
 static void init_fifo(co_obj_t *canopen)
 {
-    fifo_config_t fifo_tx_config = {.message = canopen->buffer_tx, .size = CAN_FIFO_SIZE};
-    fifo_config_t fifo_rx_config = {.message = canopen->buffer_rx, .size = CAN_FIFO_SIZE};
+    fifo_config_t fifo_tx_config = {.message = canopen->buffer_tx,
+                                    .size = CAN_FIFO_SIZE};
+    fifo_config_t fifo_rx_config = {.message = canopen->buffer_rx,
+                                    .size = CAN_FIFO_SIZE};
     fifo_init(&canopen->fifo_tx, fifo_tx_config);
     fifo_init(&canopen->fifo_rx, fifo_rx_config);
 }
 
-static msg_type_t canopen_msg_type_from_id(uint32_t id)
+static co_msg_type_t canopen_msg_type_from_id(uint32_t id)
 {
     switch (id) {
     case 0x000:
@@ -336,7 +334,8 @@ static msg_type_t canopen_msg_type_from_id(uint32_t id)
     return TYPE_UNKNOWN;
 }
 
-// // void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t mask, uint8_t fifo)
+// // void CANopen_config_filter_mask(CANopen *canopen, uint32_t id1,  uint32_t
+// mask, uint8_t fifo)
 // // {
 // //   CANopenFilterConfig filter;
 // //   filter.mode = COB_FILTERMODE_IDMASK;
@@ -351,11 +350,13 @@ static msg_type_t canopen_msg_type_from_id(uint32_t id)
 // //   can_conf_filter(&filter);
 // // }
 
-// void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data, uint8_t dlc)
+// void canopen_process_rx_message(CANopen *canopen, uint32_t id, uint8_t *data,
+// uint8_t dlc)
 // {
 //   for (uint8_t i = 0; i < canopen->info.callbacks_count; i++)
 //   {
-//     if ((canopen->callbacks[i].id == id) && (canopen->callbacks[i].callback != NULL))
+//     if ((canopen->callbacks[i].id == id) && (canopen->callbacks[i].callback
+//     != NULL))
 //     {
 //       canopen->callbacks[i].callback(id, data, dlc);
 //       return;
@@ -375,23 +376,3 @@ static msg_type_t canopen_msg_type_from_id(uint32_t id)
 
 //   return res;
 // }
-
-co_res_t is_valid_fifo(co_obj_t *canopen, uint8_t fifo)
-{
-    if ((fifo != COB_RX_FIFO0) && ((fifo != COB_RX_FIFO1))) {
-        canopen->info.status.bit.invalid_fifo = 1;
-        return CANOPEN_ERROR;
-    }
-
-    return CANOPEN_OK;
-}
-
-static co_res_t is_valid_bank(co_obj_t *canopen, uint8_t bank)
-{
-    if (bank == 0xFF) {
-        canopen->info.status.bit.filter_banks_full = 1;
-        return CANOPEN_ERROR;
-    }
-
-    return CANOPEN_OK;
-}

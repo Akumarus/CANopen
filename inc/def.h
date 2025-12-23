@@ -53,7 +53,7 @@ typedef enum {
     TYPE_RTR,
     TYPE_LSS_TX,
     TYPE_LSS_RX,
-} msg_type_t;
+} co_msg_type_t;
 
 typedef enum {
     NMT_STATE_BOOTUP = 0x00,
@@ -61,15 +61,15 @@ typedef enum {
     NMT_STATE_OPERATIONAL = 0x05,
     NMT_STATE_PRE_OPERATIONAL = 0x7F,
     NMT_STATE_RESETING = 0x80
-} canopen_nmt_state_t;
+} co_nmt_state_t;
 
 typedef enum {
-    NMT_CS_START_REMOTE_NODE = 0x01,
-    NMT_CS_STOP_REMOTE_NODE = 0x02,
-    NMT_CS_ENTER_PRE_OPERATION = 0x80,
-    NMT_CS_RESET_NODE = 0x81,
-    NMT_CS_RESET_COMMUNICATION = 0x82,
-} canopen_nmt_cmd_t;
+    NMT_CS_START = 0x01,
+    NMT_CS_STOP = 0x02,
+    NMT_CS_PREOP = 0x80,
+    NMT_CS_RESET = 0x81,
+    NMT_CS_COM_RESET = 0x82,
+} co_nmt_cmd_t;
 
 typedef enum {
     CANOPEN_OK = 0,
@@ -105,7 +105,8 @@ typedef struct {
     };
 } co_pdo_t;
 
-static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
+static_assert(sizeof(co_pdo_t) == 8,
+              "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
 typedef struct {
     uint8_t cmd;       // 1 байт
@@ -140,7 +141,7 @@ typedef union {
 
 typedef struct {
     uint8_t id;
-    canopen_nmt_state_t nmt_state;
+    co_nmt_state_t nmt_state;
     uint32_t heartbeat_timeout;
     uint32_t last_heartbeat_time;
     uint32_t online;
@@ -150,14 +151,14 @@ typedef struct {
     uint32_t sdo_timestamp;
     uint32_t nmt_timestamp;
     // canopen_nmt_state_t nmt_state; // TODO расширить и на PDO + SDO
-} canopen_node_t;
+} co_node_t;
 
 typedef struct {
     uint32_t id;
     uint8_t dlc;
-    msg_type_t type;
+    co_msg_type_t type;
     cob_frame_t frame;
-    canopen_node_t *node;
+    co_node_t *node;
 } co_msg_t;
 
 #endif // DEF_H

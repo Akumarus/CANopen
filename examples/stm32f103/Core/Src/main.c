@@ -84,8 +84,8 @@ device_data_t device_data = {.error_register = 0,
 od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
     /* --------------------------------------------------------------------------------------------------------------------------
      */
-    /* | Parameter name   | Index | Sub index |   Data type     | Flag  |       Data pointer | Min |
-       Max        |*/
+    /* | Parameter name   | Index | Sub index |   Data type     | Flag  | Data
+       pointer | Min | Max        |*/
     /* --------------------------------------------------------------------------------------------------------------------------
      */
     {"Error register  ",
@@ -104,7 +104,14 @@ od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
      &device_data.error_history[0],
      {0},
      {.i8 = 127}},
-    {"Device Name     ", 0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name, {0}, {0}},
+    {"Device Name     ",
+     0x1008,
+     0x00,
+     OD_TYPE_STRING,
+     OD_RO,
+     &device_data.device_name,
+     {0},
+     {0}},
     {"Heartbeat_time  ",
      0x1010,
      0x00,
@@ -196,9 +203,11 @@ int main(void)
 
     /* USER CODE END 1 */
 
-    /* MCU Configuration--------------------------------------------------------*/
+    /* MCU
+     * Configuration--------------------------------------------------------*/
 
-    /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+    /* Reset of all peripherals, Initializes the Flash interface and the
+     * Systick. */
     HAL_Init();
 
     /* USER CODE BEGIN Init */
@@ -216,8 +225,9 @@ int main(void)
     MX_CAN_Init();
     MX_TIM1_Init();
     /* USER CODE BEGIN 2 */
-    /*CANopen CLIENT ========================================================================*/
-    canopen_init(&canopen_client, CANOPEN_CLIENT, NODE_ID_PLATE2, COB_ID_STD);
+    /*CANopen CLIENT
+     * ========================================================================*/
+    co_init(&canopen_client, CANOPEN_CLIENT, NODE_ID_PLATE2, COB_ID_STD);
     canopen_config_node_id(&canopen_client, NODE_ID_PLATE1);
 
     /* Конфигурация PDO сообщений */
@@ -228,8 +238,9 @@ int main(void)
     co_sdo_cfg(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
     /*=======================================================================================*/
 
-    /*CANopen SERVER ========================================================================*/
-    canopen_init(&canopen_server, CANOPEN_SERVER, NODE_ID_PLATE1, COB_ID_STD);
+    /*CANopen SERVER
+     * ========================================================================*/
+    co_init(&canopen_server, CANOPEN_SERVER, NODE_ID_PLATE1, COB_ID_STD);
     canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
     canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
     canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
@@ -291,8 +302,8 @@ void SystemClock_Config(void)
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_ClkInitStruct.ClockType =
-        RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
+                                  RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
@@ -314,7 +325,8 @@ void SystemClock_Config(void)
 void Error_Handler(void)
 {
     /* USER CODE BEGIN Error_Handler_Debug */
-    /* User can add his own implementation to report the HAL error return state */
+    /* User can add his own implementation to report the HAL error return state
+     */
     __disable_irq();
     while (1) {
     }
@@ -331,8 +343,9 @@ void Error_Handler(void)
 void assert_failed(uint8_t *file, uint32_t line)
 {
     /* USER CODE BEGIN 6 */
-    /* User can add his own implementation to report the file name and line number,
-       ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+    /* User can add his own implementation to report the file name and line
+       number, ex: printf("Wrong parameters value: file %s on line %d\r\n",
+       file, line) */
     /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
