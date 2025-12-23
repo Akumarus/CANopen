@@ -36,30 +36,21 @@ typedef enum {
     PDO_NUM_2 = 2,
     PDO_NUM_3 = 3,
     PDO_NUM_4 = 4,
-} pdo_number_t;
+} pdo_num_t;
 
 /* PDO Messages -------------------------------------------------*/
-#define canopen_config_pdo1_tx(canopen, msg, node_id, dlc)                                         \
-    canopen_config_pdo_tx(canopen, PDO_NUM_1, node_id, msg, dlc)
-#define canopen_config_pdo2_tx(canopen, msg, node_id, dlc)                                         \
-    canopen_config_pdo_tx(canopen, PDO_NUM_2, node_id, msg, dlc)
-#define canopen_config_pdo3_tx(canopen, msg, node_id, dlc)                                         \
-    canopen_config_pdo_tx(canopen, PDO_NUM_3, node_id, msg, dlc)
-#define canopen_config_pdo4_tx(canopen, msg, node_id, dlc)                                         \
-    canopen_config_pdo_tx(canopen, PDO_NUM_4, node_id, msg, dlc)
+#define co_pdo1_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_1, node_id, msg, dlc)
+#define co_pdo2_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_2, node_id, msg, dlc)
+#define co_pdo3_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_3, node_id, msg, dlc)
+#define co_pdo4_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_4, node_id, msg, dlc)
 
-#define canopen_config_pdo1_rx(canopen, node_id, callback)                                         \
-    canopen_config_pdo_rx(canopen, PDO_NUM_1, node_id, callback)
-#define canopen_config_pdo2_rx(canopen, node_id, callback)                                         \
-    canopen_config_pdo_rx(canopen, PDO_NUM_2, node_id, callback)
-#define canopen_config_pdo3_rx(canopen, node_id, callback)                                         \
-    canopen_config_pdo_rx(canopen, PDO_NUM_3, node_id, callback)
-#define canopen_config_pdo4_rx(canopen, node_id, callback)                                         \
-    canopen_config_pdo_rx(canopen, PDO_NUM_4, node_id, callback)
+#define co_pdo1_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_1, node_id, callback)
+#define co_pdo2_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_2, node_id, callback)
+#define co_pdo3_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_3, node_id, callback)
+#define co_pdo4_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_4, node_id, callback)
 
-co_res_t canopen_send_pdo(co_obj_t *canopen, co_msg_t *msg, canopen_pdo_data_t *data);
-co_res_t canopen_config_pdo_rx(co_obj_t *canopen, pdo_number_t pdo_num, uint8_t node_id,
-                               co_hdl_t callback);
-co_res_t canopen_config_pdo_tx(co_obj_t *canopen, pdo_number_t pdo_num, uint8_t node_id,
-                               co_msg_t *msg, uint8_t dlc);
+co_res_t co_pdo_send(co_obj_t *co, co_msg_t *msg, co_pdo_t *data);
+co_res_t co_pdo_cfg_rx(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_hdl_t callback);
+co_res_t co_pdo_cfg_tx(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_msg_t *msg,
+                       uint8_t dlc);
 #endif // PDO_H

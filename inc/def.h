@@ -103,29 +103,28 @@ typedef struct {
             uint8_t byte7;
         };
     };
-} canopen_pdo_data_t;
+} co_pdo_t;
 
-static_assert(sizeof(canopen_pdo_data_t) == 8,
-              "canopen_pdo_data_t must be exactly 8 bytes for CAN PDO!");
+static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
 typedef struct {
     uint8_t cmd;       // 1 байт
     uint16_t index;    // 2-3 байты
     uint8_t sub_index; // 4 байт
     uint32_t data;     // 5-8 байты
-} canopen_sdo_data_t;
+} co_sdo_t;
 
 typedef struct {
     uint8_t cmd;
     uint8_t node_id;
-} canopen_nmt_data_t;
+} co_nmt_t;
 
 #pragma pack(push, 1)
 typedef union {
     uint8_t row[COB_SIZE_PDO];
-    canopen_nmt_data_t nmt;
-    canopen_pdo_data_t pdo;
-    canopen_sdo_data_t sdo;
+    co_nmt_t nmt;
+    co_pdo_t pdo;
+    co_sdo_t sdo;
 } cob_frame_t;
 #pragma pack(pop)
 

@@ -55,8 +55,8 @@
 
 typedef enum {
     /** Основные команды ----------------------------------------------*/
-    SDO_REQ_INITIATE_DOWNLOAD = 0x20, // 0010 0000 - Начало записи
-    SDO_REQ_INITIATE_UPLOAD = 0x40,   // 0100 0000 - Начало чтения
+    SDO_REQ_DOWNLOAD = 0x20, // 0010 0000 - Начало записи
+    SDO_REQ_UPLOAD = 0x40,   // 0100 0000 - Начало чтения
     SDO_REQ_DOWNLOAD_SEGMENT = 0x00,
     SDO_REQ_UPLOAD_SEGMENT = 0x60,
     SDO_REQ_ABORT = 0x80,
@@ -73,7 +73,7 @@ typedef enum {
     SDO_FLAG_EXPEDITED = 0x02,      // Бит expedited
     SDO_FLAG_TOGGLE = 0x10,
     SDO_SIZE_N_MASK = 0x0C,
-} sdo_cmd_t;
+} co_sdo_cmd_t;
 
 typedef enum {
     SDO_ABORT_TOGGLE_BIT = 0x05030000,
@@ -87,33 +87,32 @@ typedef enum {
     SDO_ABORT_VALUE_TOO_HIGH = 0x06090032,
     SDO_ABORT_VALUE_TOO_LOW = 0x06090036,
     SDO_ABORT_GENERAL = 0x08000000,
-} canopen_abort_code_t;
+} co_abort_code_t;
 
 /**  Запросы прервать операцию  ------------------------------------------------*/
-#define canopen_sdo_abort(canopen, msg, index, sub_index, abort_code)                              \
-    co_sdo_send(canopen, msg, SDO_REQ_ABORT, index, sub_index, abort_code)
+#define canopen_sdo_abort(co, msg, idx, sub_idx, abort_code)                                       \
+    co_sdo_send(canopen, msg, SDO_REQ_ABORT, idx, sub_idx, abort_code)
 
 /**  Запросы на запись в od 8/16/32 бит ----------------------------------------*/
-#define canopen_sdo_write_32(canopen, msg, index, sub_index, data)                                 \
-    co_sdo_send(canopen, msg, SDO_REQ_WRITE_4BYTE, index, sub_index, data)
-#define canopen_sdo_write_16(canopen, msg, index, sub_index, data)                                 \
-    cco_sdo_send(canopen, msg, SDO_REQ_WRITE_2BYTE, index, sub_index, data)
-#define canopen_sdo_write_8(canopen, msg, index, sub_index, data)                                  \
-    co_sdo_send(canopen, msg, SDO_REQ_WRITE_1BYTE, index, sub_index, data)
+#define canopen_sdo_write_32(co, msg, idx, sub_idx, data)                                          \
+    co_sdo_send(co, msg, SDO_REQ_WRITE_4BYTE, idx, sub_idx, data)
+#define canopen_sdo_write_16(co, msg, idx, sub_idx, data)                                          \
+    cco_sdo_send(co, msg, SDO_REQ_WRITE_2BYTE, idx, sub_idx, data)
+#define canopen_sdo_write_8(co, msg, idx, sub_idx, data)                                           \
+    co_sdo_send(co, msg, SDO_REQ_WRITE_1BYTE, idx, sub_idx, data)
 
 /**  Запросы на чтение из od 8/16/32 бит ----------------------------------------*/
-#define canopen_sdo_read_32(canopen, msg, index, sub_index)                                        \
-    co_sdo_send(canopen, msg, SDO_REQ_INITIATE_UPLOAD, index, sub_index, 0)
-#define canopen_sdo_read_16(canopen, msg, index, sub_index)                                        \
-    co_sdo_send(canopen, msg, SDO_REQ_INITIATE_UPLOAD, index, sub_index, 0)
-#define canopen_sdo_read_8(canopen, msg, index, sub_index)                                         \
-    co_sdo_send(canopen, msg, SDO_REQ_INITIATE_UPLOAD, index, sub_index, 0)
+#define canopen_sdo_read_32(co, msg, idx, sub_idx)                                                 \
+    co_sdo_send(co, msg, SDO_REQ_UPLOAD, idx, sub_idx, 0)
+#define canopen_sdo_read_16(co, msg, idx, sub_idx)                                                 \
+    co_sdo_send(co, msg, SDO_REQ_UPLOAD, idx, sub_idx, 0)
+#define canopen_sdo_read_8(co, msg, idx, sub_idx)                                                  \
+    co_sdo_send(co, msg, SDO_REQ_UPLOAD, idx, sub_idx, 0)
 
-co_res_t co_sdo_config(co_obj_t *canopen, co_msg_t *msg, uint8_t node_id, co_hdl_t callback);
-co_res_t co_sdo_send(co_obj_t *canopen, co_msg_t *msg, uint8_t cmd, uint16_t index,
-                     uint8_t sub_index, uint32_t data);
-co_res_t co_proc_sdo_tx(co_obj_t *canopen, co_msg_t *msg);
-co_res_t co_proc_sdo_rx(co_obj_t *canopen, co_msg_t *msg);
-void canopen_sdo_callback(co_obj_t *canopen, co_msg_t *msg);
+co_res_t co_sdo_cfg(co_obj_t *co, co_msg_t *msg, uint8_t node_id, co_hdl_t callback);
+co_res_t co_sdo_send(co_obj_t *co, co_msg_t *msg, uint8_t cmd, uint16_t idx, uint8_t sub_idx,
+                     uint32_t data);
+co_res_t co_proc_sdo_tx(co_obj_t *co, co_msg_t *msg);
+co_res_t co_proc_sdo_rx(co_obj_t *co, co_msg_t *msg);
 
 #endif // SDO_H
