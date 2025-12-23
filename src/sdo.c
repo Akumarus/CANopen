@@ -78,7 +78,7 @@ co_res_t co_proc_sdo_tx(co_obj_t *canopen, co_msg_t *msg)
     return CANOPEN_OK;
 }
 
-co_res_t canopen_server_process_sdo(co_obj_t *canopen, co_msg_t *msg)
+co_res_t co_proc_sdo_rx(co_obj_t *canopen, co_msg_t *msg)
 {
     switch (msg->frame.sdo.cmd) {
     case SDO_REQ_INITIATE_UPLOAD:
