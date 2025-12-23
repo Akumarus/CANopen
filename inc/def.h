@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #define COB_SIZE_DEF 8
 #define COB_SIZE_PDO COB_SIZE_DEF // communication object
@@ -28,7 +29,7 @@ typedef enum
   PDO4 = 0x480,
   SDO_RX = 0x580,
   SDO_TX = 0x600,
-  HEARTBIT = 0x700,
+  HEARTBEAT = 0x700,
   LSS_TX = 0x7E4, // TODO Посмотреть, что это
   LSS_RX = 0x7E5,
 } canopen_fc_t;
@@ -155,6 +156,11 @@ typedef union
 typedef struct
 {
   uint8_t id;
+  canopen_nmt_state_t nmt_state;
+  uint32_t heartbeat_timeout;
+  uint32_t last_heartbeat_time;
+  uint32_t online;
+
   timeout_staus_t status;
   uint32_t pdo_timestamp;
   uint32_t sdo_timestamp;

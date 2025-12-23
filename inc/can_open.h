@@ -103,12 +103,16 @@ typedef struct
   fifo_t fifo_rx;
   canopen_role_t role;
   canopen_info_t info;
+  uint32_t node_count;
   canopen_node_t node[NODES_COUNT];
   canopen_msg_t buffer_tx[CAN_FIFO_SIZE];
   canopen_msg_t buffer_rx[CAN_FIFO_SIZE];
   filter_bank_t bank_list[MAX_BANK_COUNT];
   canopen_handler_t callbacks[MAX_CALLBACKS];
   canopen_nmt_state_t nmt_state;
+  uint32_t heartbeat_interval_ms;
+  uint32_t last_heartbeat_time;
+  bool heartbeat_enable;
 } canopen_t;
 
 canopen_state_t canopen_init(canopen_t *canopen, canopen_role_t role, uint8_t node_id, uint32_t ide);
