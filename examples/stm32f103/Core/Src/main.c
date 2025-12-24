@@ -24,7 +24,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "can_open.h"
+#include "co.h"
 #include "fifo.h"
 #include "obj.h"
 #include "params.h"
@@ -104,14 +104,7 @@ od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
      &device_data.error_history[0],
      {0},
      {.i8 = 127}},
-    {"Device Name     ",
-     0x1008,
-     0x00,
-     OD_TYPE_STRING,
-     OD_RO,
-     &device_data.device_name,
-     {0},
-     {0}},
+    {"Device Name     ", 0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name, {0}, {0}},
     {"Heartbeat_time  ",
      0x1010,
      0x00,
@@ -302,8 +295,8 @@ void SystemClock_Config(void)
 
     /** Initializes the CPU, AHB and APB buses clocks
      */
-    RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK |
-                                  RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+    RCC_ClkInitStruct.ClockType =
+        RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
     RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
     RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;

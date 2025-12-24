@@ -44,7 +44,6 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/can_open.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/filter.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/port.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/fifo.c
@@ -52,6 +51,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/sdo.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/obj.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/nmt.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/co.c
 )
 
 # Add include paths

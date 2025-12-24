@@ -1,7 +1,7 @@
 #ifndef SDO_H
 #define SDO_H
 
-#include "can_open.h"
+#include "co.h"
 #include "def.h"
 
 /*

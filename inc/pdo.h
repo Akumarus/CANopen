@@ -1,7 +1,7 @@
 #ifndef PDO_H
 #define PDO_H
 
-#include "can_open.h"
+#include "co.h"
 #include "def.h"
 
 /* MASTER: ID для общения с Slave (NodeID = N)    */

@@ -1,7 +1,7 @@
 #ifndef NMT_H
 #define NMT_H
 
-#include "can_open.h"
+#include "co.h"
 #include "def.h"
 
 co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg);
@@ -38,25 +38,13 @@ inline co_res_t co_nmt_com_reset(co_obj_t *co, uint8_t id)
 }
 
 // Broadcast версии
-inline co_res_t co_nmt_bcast_start(co_obj_t *co)
-{
-    return co_nmt_send_cmd(co, 0, NMT_CS_START);
-}
+inline co_res_t co_nmt_bcast_start(co_obj_t *co) { return co_nmt_send_cmd(co, 0, NMT_CS_START); }
 
-inline co_res_t co_nmt_bcast_stop(co_obj_t *co)
-{
-    return co_nmt_send_cmd(co, 0, NMT_CS_STOP);
-}
+inline co_res_t co_nmt_bcast_stop(co_obj_t *co) { return co_nmt_send_cmd(co, 0, NMT_CS_STOP); }
 
-inline co_res_t co_nmt_bcast_preop(co_obj_t *co)
-{
-    return co_nmt_send_cmd(co, 0, NMT_CS_PREOP);
-}
+inline co_res_t co_nmt_bcast_preop(co_obj_t *co) { return co_nmt_send_cmd(co, 0, NMT_CS_PREOP); }
 
-inline co_res_t co_nmt_bcast_reset(co_obj_t *co)
-{
-    return co_nmt_send_cmd(co, 0, NMT_CS_RESET);
-}
+inline co_res_t co_nmt_bcast_reset(co_obj_t *co) { return co_nmt_send_cmd(co, 0, NMT_CS_RESET); }
 
 inline co_res_t co_nmt_bcast_com_reset(co_obj_t *co)
 {

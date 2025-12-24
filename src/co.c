@@ -1,4 +1,4 @@
-#include "can_open.h"
+#include "co.h"
 #include "nmt.h"
 #include "pdo.h"
 #include "port.h"
