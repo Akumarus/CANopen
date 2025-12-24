@@ -4,6 +4,9 @@
 #include "can_open.h"
 #include "def.h"
 
+co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg);
+co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg);
+
 co_res_t co_nmt_send_bootup(co_obj_t *co);
 co_res_t co_nmt_send_heartbeat(co_obj_t *co);
 co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd);

@@ -3,6 +3,7 @@
 
 #include "def.h"
 #include "fifo.h"
+#include "filter.h"
 
 #define NODES_COUNT 5
 
@@ -12,16 +13,6 @@ typedef enum {
     COB_RX_FIFO0 = 0x00000000U, /*!< CAN receive FIFO 0 */
     COB_RX_FIFO1 = 0x00000001U  /*!< CAN receive FIFO 1 */
 } RxFifoType;
-
-typedef enum {
-    COB_FILTERMODE_IDMASK = 0x00000000U,
-    COB_FILTERMODE_IDLIST = 0x00000001U
-} FileterMode;
-
-typedef enum {
-    COB_FILTERSCALE_16BIT = 0x00000000U,
-    COB_FILTERSCALE_32BIT = 0x00000001U,
-} FilterScale;
 
 typedef enum {
     COB_ID_STD = 0x00000000U, /*!< Standard Id */
@@ -51,12 +42,6 @@ typedef struct {
     uint32_t id;
     co_hdl_t callback;
 } canopen_handler_t;
-
-typedef struct {
-    uint32_t ids[IDS_PER_BANK];
-    uint8_t used;
-    uint8_t fifo;
-} filter_bank_t;
 
 typedef enum {
     CANOPEN_SERVER = 0,
@@ -95,7 +80,7 @@ typedef struct {
     co_node_t node[NODES_COUNT];
     co_msg_t buffer_tx[CAN_FIFO_SIZE];
     co_msg_t buffer_rx[CAN_FIFO_SIZE];
-    filter_bank_t banks[MAX_BANK_COUNT];
+    co_bank_t banks[MAX_BANK_COUNT];
     canopen_handler_t callbacks[MAX_CALLBACKS];
     co_nmt_state_t nmt_state;
     uint32_t heartbeat_interval_ms;
@@ -107,8 +92,7 @@ co_res_t co_init(co_obj_t *co, co_role_t role, uint8_t node_id, uint32_t ide);
 co_res_t canopen_process_tx(co_obj_t *canopen);
 co_res_t canopen_process_rx(co_obj_t *canopen);
 co_res_t canopen_config_node_id(co_obj_t *canopen, uint8_t node_id);
-co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo,
-                                 co_hdl_t callback);
+co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback);
 co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo);
 co_res_t canopen_send_msg_to_fifo_rx(co_obj_t *canopen, co_msg_t *msg);
 // void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t

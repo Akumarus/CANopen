@@ -11,7 +11,7 @@
 #define COB_SIZE_PDO COB_SIZE_DEF // communication object
 #define COB_SIZE_SDO COB_SIZE_DEF // communication object
 #define MAX_BANK_COUNT 14
-#define IDS_PER_BANK 4
+
 #define MAX_CALLBACKS 10
 #define MAX_11BIT_ID 0x7FF
 #define CAN_FIFO_SIZE 32
@@ -105,8 +105,7 @@ typedef struct {
     };
 } co_pdo_t;
 
-static_assert(sizeof(co_pdo_t) == 8,
-              "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
+static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
 typedef struct {
     uint8_t cmd;       // 1 байт

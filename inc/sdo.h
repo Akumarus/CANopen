@@ -112,7 +112,7 @@ typedef enum {
 co_res_t co_sdo_cfg(co_obj_t *co, co_msg_t *msg, uint8_t node_id, co_hdl_t callback);
 co_res_t co_sdo_send(co_obj_t *co, co_msg_t *msg, uint8_t cmd, uint16_t idx, uint8_t sub_idx,
                      uint32_t data);
-co_res_t co_proc_sdo_tx(co_obj_t *co, co_msg_t *msg);
-co_res_t co_proc_sdo_rx(co_obj_t *co, co_msg_t *msg);
+co_res_t co_cli_proc_sdo(co_obj_t *co, co_msg_t *msg);
+co_res_t co_srv_proc_sdo(co_obj_t *co, co_msg_t *msg);
 
 #endif // SDO_H

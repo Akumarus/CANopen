@@ -52,7 +52,7 @@ co_res_t co_sdo_send(co_obj_t *co, co_msg_t *msg, uint8_t cmd, uint16_t index, u
     return (fifo_state == FIFO_FULL) ? CANOPEN_ERROR : CANOPEN_OK;
 }
 
-co_res_t co_proc_sdo_tx(co_obj_t *co, co_msg_t *msg)
+co_res_t co_cli_proc_sdo(co_obj_t *co, co_msg_t *msg)
 {
     if (!msg->node->status.bit.sdo_pending)
         return CANOPEN_ERROR;
@@ -73,7 +73,7 @@ co_res_t co_proc_sdo_tx(co_obj_t *co, co_msg_t *msg)
     return CANOPEN_OK;
 }
 
-co_res_t co_proc_sdo_rx(co_obj_t *co, co_msg_t *msg)
+co_res_t co_srv_proc_sdo(co_obj_t *co, co_msg_t *msg)
 {
     switch (msg->frame.sdo.cmd) {
     case SDO_REQ_UPLOAD:

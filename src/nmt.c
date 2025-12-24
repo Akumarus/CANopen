@@ -5,7 +5,7 @@
 #define BOOTUP_CMD 0x05
 #define HEARTBEAT_CMD 0x00
 
-co_res_t co_server_process_nmt(co_obj_t *co, co_msg_t *msg)
+co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg)
 {
     assert(co != NULL);
     assert(co->role != CANOPEN_CLIENT);
@@ -137,14 +137,14 @@ co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd)
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }
 
-co_res_t canopen_client_process_heartbeat(co_obj_t *canopen, co_msg_t *msg)
+co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg)
 {
-    assert(canopen != NULL);
+    assert(co != NULL);
     assert(msg != NULL);
-    assert(canopen->role == CANOPEN_CLIENT);
+    assert(co->role == CANOPEN_CLIENT);
 
     uint8_t node_id = msg->id - HEARTBEAT;
-    co_node_t *node = get_node_index(canopen, node_id);
+    co_node_t *node = get_node_index(co, node_id);
     if (node == NULL) {
         // TODO Можно самим добавить узел сети
         return CANOPEN_ERROR;
@@ -164,7 +164,7 @@ co_res_t canopen_client_process_heartbeat(co_obj_t *canopen, co_msg_t *msg)
     }
     node->online = true;
     node->last_heartbeat_time =
-        canopen->timestamp; // TODO Проверить, то ли время
+        co->timestamp; // TODO Проверить, то ли время
     return CANOPEN_OK;
 }
 
