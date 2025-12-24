@@ -34,62 +34,39 @@ co_res_t co_init(co_obj_t *co, co_role_t role, uint8_t node_id, uint32_t ide)
     return CANOPEN_OK;
 }
 
-co_res_t canopen_config_node_id(co_obj_t *canopen, uint8_t node_id)
+co_res_t co_config_node_id(co_obj_t *co, uint8_t node_id)
 {
-    assert(canopen != NULL);
+    assert(co != NULL);
     assert(node_id < 128);
 
     // TODO быстрый перебор
     for (uint8_t i = 0; i < NODES_COUNT; i++) {
-        if (canopen->node[i].id == 0xFF) {
-            canopen->node[i].id = node_id;
+        if (co->node[i].id == 0xFF) {
+            co->node[i].id = node_id;
             return CANOPEN_OK;
         }
     }
     return CANOPEN_ERROR; // TODO Добавить статус
 }
 
-co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback)
+co_res_t co_process_msg_tx(co_obj_t *co)
 {
-    assert(canopen != NULL);
-    assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
-    assert(callback != NULL);
-    assert(canopen->info.callbacks_count < MAX_CALLBACKS);
+    assert(co != NULL);
 
-    if (is_callback_register(canopen, id))
-        return CANOPEN_ERROR;
+    co_msg_t msg = {0};
+    while (!fifo_is_empty(&co->fifo_tx)) {
+        if (port_get_free_mailboxes() == 0) // TODO Другой статус
+            return CANOPEN_ERROR;
 
-    canopen->callbacks[canopen->info.callbacks_count].id = id;
-    canopen->callbacks[canopen->info.callbacks_count].callback = callback;
-    canopen->info.callbacks_count++;
-
-    if (co_cnf_filter_list_16b(canopen->banks, id, fifo) != CANOPEN_OK)
-        return CANOPEN_ERROR;
+        if (fifo_pop(&co->fifo_tx, &msg) == FIFO_OK) {
+            port_can_send(msg.id, COB_RTR_DATA, co->ide, msg.dlc, msg.frame.row);
+        }
+    }
 
     return CANOPEN_OK;
 }
 
-co_res_t canopen_process_tx(co_obj_t *canopen)
-{
-    assert(canopen != NULL);
-
-    if (port_get_free_mailboxes() == 0) {
-        canopen->info.tx_busy_mailbox_count++;
-        return CANOPEN_ERROR;
-    }
-
-    co_msg_t msg = {0};
-    if (fifo_pop(&canopen->fifo_tx, &msg) == FIFO_OK) {
-        port_can_send(msg.id, COB_RTR_DATA, canopen->ide, msg.dlc, msg.frame.row);
-        if (msg.type == TYPE_PDO1_TX)
-            canopen->info.tx_sended_pdo_count++;
-        return CANOPEN_OK;
-    }
-
-    return CANOPEN_ERROR;
-}
-
-co_res_t canopen_process_rx(co_obj_t *co)
+co_res_t co_process_msg_rx(co_obj_t *co)
 {
     assert(co != NULL);
 
@@ -139,32 +116,51 @@ co_res_t canopen_process_rx(co_obj_t *co)
     return CANOPEN_OK;
 }
 
-co_res_t canopen_check_timeouts(co_obj_t *canopen)
+co_res_t co_process_time(co_obj_t *co)
 {
-    assert(canopen != NULL);
+    assert(co != NULL);
 
-    uint32_t current_time = port_get_timestamp() - canopen->timestamp;
-
+    uint32_t elapsed = 0;
+    uint32_t current_time = port_get_timestamp() - co->timestamp;
     for (uint8_t i = 0; i < NODES_COUNT; i++) {
-        co_node_t *node = &canopen->node[i];
+        co_node_t *node = &co->node[i];
 
         if (node->id == 0xFF) // TODO задачть через дефайн или переменную
             break;
 
-        if (node->sdo_timestamp != 0) {
-            uint32_t elapsed;
-            if (current_time >= node->sdo_timestamp)
-                elapsed = current_time - node->sdo_timestamp;
-            else
-                elapsed = (UINT32_MAX - node->sdo_timestamp) + current_time + 1;
-
-            if (elapsed >= 1000) // TODO задачть через дефайн или переменную
-            {
-                node->sdo_timestamp = 0;
-                return CANOPEN_ERROR;
-            }
-        }
+        // для каждой ноды нужно расчитать время с последнего сообщения для всех сообщений
+        // elapsed = co_get_elapsed_time(current_time, node->sdo_timestamp);
+        // if (elapsed >= 1000) // TODO задачть через дефайн или переменную
+        // {
+        //     node->sdo_timestamp = 0;
+        //     return CANOPEN_ERROR;
+        // }
     }
+
+    return CANOPEN_OK;
+}
+
+// co_res_t co_get_elapsed_time(uint32_t time, uint32_t last_time)
+// {
+//     return (time >= last_time) ? time - last_time : (UINT32_MAX - last_time) + time + 1;
+// }
+
+co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback)
+{
+    assert(canopen != NULL);
+    assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
+    assert(callback != NULL);
+    assert(canopen->info.callbacks_count < MAX_CALLBACKS);
+
+    if (is_callback_register(canopen, id))
+        return CANOPEN_ERROR;
+
+    canopen->callbacks[canopen->info.callbacks_count].id = id;
+    canopen->callbacks[canopen->info.callbacks_count].callback = callback;
+    canopen->info.callbacks_count++;
+
+    if (co_cnf_filter_list_16b(canopen->banks, id, fifo) != CANOPEN_OK)
+        return CANOPEN_ERROR;
 
     return CANOPEN_OK;
 }
@@ -229,10 +225,10 @@ static void init_nodes(co_obj_t *canopen)
 {
     for (uint8_t i = 0; i < NODES_COUNT; i++) {
         canopen->node[i].id = 0xFF;
-        canopen->node[i].status.all = 0;
-        canopen->node[i].sdo_timestamp = 0;
-        canopen->node[i].pdo_timestamp = 0;
-        canopen->node[i].nmt_timestamp = 0;
+        // canopen->node[i].status.all = 0;
+        // canopen->node[i].sdo_timestamp = 0;
+        // canopen->node[i].pdo_timestamp = 0;
+        // canopen->node[i].nmt_timestamp = 0;
     }
 }
 

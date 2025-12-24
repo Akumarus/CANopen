@@ -221,7 +221,7 @@ int main(void)
     /*CANopen CLIENT
      * ========================================================================*/
     co_init(&canopen_client, CANOPEN_CLIENT, NODE_ID_PLATE2, COB_ID_STD);
-    canopen_config_node_id(&canopen_client, NODE_ID_PLATE1);
+    co_config_node_id(&canopen_client, NODE_ID_PLATE1);
 
     /* Конфигурация PDO сообщений */
     co_pdo1_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
@@ -234,9 +234,9 @@ int main(void)
     /*CANopen SERVER
      * ========================================================================*/
     co_init(&canopen_server, CANOPEN_SERVER, NODE_ID_PLATE1, COB_ID_STD);
-    canopen_config_node_id(&canopen_server, NODE_ID_PLATE1);
-    canopen_config_node_id(&canopen_server, NODE_ID_PLATE2);
-    canopen_config_node_id(&canopen_server, NODE_ID_PLATE3);
+    co_config_node_id(&canopen_server, NODE_ID_PLATE1);
+    co_config_node_id(&canopen_server, NODE_ID_PLATE2);
+    co_config_node_id(&canopen_server, NODE_ID_PLATE3);
 
     /* Конфигурация PDO сообщений */
     co_pdo1_cfg_tx(&canopen_server, &pdo0, NODE_ID_PLATE2, 8);
@@ -257,11 +257,11 @@ int main(void)
 
         canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1010, 0);
 
-        canopen_process_rx(&canopen_server);
-        canopen_process_tx(&canopen_server);
+        co_process_msg_rx(&canopen_server);
+        co_process_msg_tx(&canopen_server);
 
-        canopen_process_rx(&canopen_client);
-        canopen_process_tx(&canopen_client);
+        co_process_msg_rx(&canopen_client);
+        co_process_msg_tx(&canopen_client);
         HAL_Delay(500);
         /* USER CODE END WHILE */
 

@@ -45,31 +45,21 @@ co_res_t co_sdo_send(co_obj_t *co, co_msg_t *msg, uint8_t cmd, uint16_t index, u
     msg->frame.sdo.sub_index = sub_index;
     msg->frame.sdo.data = data;
 
-    if (cmd != SDO_REQ_ABORT)
-        msg->node->status.bit.sdo_pending = 1;
-
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, msg);
     return (fifo_state == FIFO_FULL) ? CANOPEN_ERROR : CANOPEN_OK;
 }
 
 co_res_t co_cli_proc_sdo(co_obj_t *co, co_msg_t *msg)
 {
-    if (!msg->node->status.bit.sdo_pending)
-        return CANOPEN_ERROR;
-
     msg->node = get_node_index(co, msg->id);
     if (msg->node == NULL)
         return CANOPEN_ERROR;
 
     if (msg->frame.sdo.cmd == SDO_REQ_ABORT) {
-        msg->node->status.bit.sdo_pending = 0;
-        msg->node->sdo_timestamp = 0;
         return CANOPEN_ERROR;
     }
 
     // Сброс таймера
-    msg->node->sdo_timestamp = 0;
-    msg->node->status.bit.sdo_pending = 0;
     return CANOPEN_OK;
 }
 
@@ -88,7 +78,6 @@ co_res_t co_srv_proc_sdo(co_obj_t *co, co_msg_t *msg)
         break;
 
     case SDO_REQ_ABORT:
-        msg->node->status.bit.sdo_pending = 0;
         break;
 
     default:

@@ -139,16 +139,20 @@ typedef union {
 } timeout_staus_t;
 
 typedef struct {
+    uint32_t timestamp;
+    uint32_t timeout;
+    bool received;
+} co_timeout_t;
+
+typedef struct {
     uint8_t id;
     co_nmt_state_t nmt_state;
     uint32_t heartbeat_timeout;
     uint32_t last_heartbeat_time;
     uint32_t online;
-
-    timeout_staus_t status;
-    uint32_t pdo_timestamp;
-    uint32_t sdo_timestamp;
-    uint32_t nmt_timestamp;
+    co_timeout_t pdo;
+    co_timeout_t sdo;
+    co_timeout_t heartbeat;
     // canopen_nmt_state_t nmt_state; // TODO расширить и на PDO + SDO
 } co_node_t;
 

@@ -89,9 +89,11 @@ typedef struct {
 } co_obj_t;
 
 co_res_t co_init(co_obj_t *co, co_role_t role, uint8_t node_id, uint32_t ide);
-co_res_t canopen_process_tx(co_obj_t *canopen);
-co_res_t canopen_process_rx(co_obj_t *canopen);
-co_res_t canopen_config_node_id(co_obj_t *canopen, uint8_t node_id);
+co_res_t co_config_node_id(co_obj_t *co, uint8_t node_id);
+co_res_t co_process_msg_tx(co_obj_t *co);
+co_res_t co_process_msg_rx(co_obj_t *co);
+co_res_t co_process_timeout(co_obj_t *co);
+
 co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback);
 co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo);
 co_res_t canopen_send_msg_to_fifo_rx(co_obj_t *canopen, co_msg_t *msg);

@@ -10,29 +10,26 @@ co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg)
     assert(co != NULL);
     assert(co->role != CANOPEN_CLIENT);
 
-    uint8_t node_id = canopen_get_node_id(msg);
+    uint8_t node_id = msg->id - NMT;
     if ((node_id != co->node_id) && (node_id != 0))
         return CANOPEN_ERROR; // TODO Нужно вернуть, что фильтр неправильно
                               // сконфигурирован или может это норма
 
     switch (msg->frame.nmt.cmd) {
     case NMT_CS_START:
-        if (co->nmt_state == NMT_STATE_PRE_OPERATIONAL ||
-            co->nmt_state == NMT_STATE_STOPPED) {
+        if (co->nmt_state == NMT_STATE_PRE_OPERATIONAL || co->nmt_state == NMT_STATE_STOPPED) {
             co->nmt_state = NMT_STATE_OPERATIONAL;
             co_nmt_send_heartbeat(co);
         }
         break;
     case NMT_CS_STOP:
-        if (co->nmt_state == NMT_STATE_OPERATIONAL ||
-            co->nmt_state == NMT_STATE_PRE_OPERATIONAL) {
+        if (co->nmt_state == NMT_STATE_OPERATIONAL || co->nmt_state == NMT_STATE_PRE_OPERATIONAL) {
             co->nmt_state = NMT_STATE_STOPPED;
             co_nmt_send_heartbeat(co);
         }
         break;
     case NMT_CS_PREOP:
-        if (co->nmt_state == NMT_STATE_OPERATIONAL ||
-            co->nmt_state == NMT_STATE_STOPPED) {
+        if (co->nmt_state == NMT_STATE_OPERATIONAL || co->nmt_state == NMT_STATE_STOPPED) {
             co->nmt_state = NMT_STATE_PRE_OPERATIONAL;
             co_nmt_send_heartbeat(co);
         }
@@ -163,8 +160,7 @@ co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg)
         return CANOPEN_ERROR;
     }
     node->online = true;
-    node->last_heartbeat_time =
-        co->timestamp; // TODO Проверить, то ли время
+    node->last_heartbeat_time = co->timestamp; // TODO Проверить, то ли время
     return CANOPEN_OK;
 }
 
