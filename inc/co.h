@@ -97,10 +97,7 @@ co_res_t co_process_timeout(co_obj_t *co);
 co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback);
 co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo);
 co_res_t canopen_send_msg_to_fifo_rx(co_obj_t *canopen, co_msg_t *msg);
-// void canopen_config_filter_mask(CANopen *canopen, uint32_t id1, uint32_t
-// mask, uint8_t fifo); //
-// TODO
-co_node_t *get_node_index(co_obj_t *canopen, uint8_t node_id);
+co_node_t *co_get_node_obj(co_obj_t *canopen, uint8_t node_id);
 uint8_t canopen_get_node_id(co_msg_t *msg);
 
 #endif // CAN_OPEN_H

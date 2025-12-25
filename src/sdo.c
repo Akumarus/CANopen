@@ -23,10 +23,6 @@ co_res_t co_sdo_cfg(co_obj_t *co, co_msg_t *msg, uint8_t node_id, co_hdl_t callb
     msg->type = (co->role == CANOPEN_CLIENT) ? TYPE_SDO_TX : TYPE_SDO_RX;
     msg->dlc = COB_SIZE_SDO;
 
-    msg->node = get_node_index(co, node_id);
-    if (msg->node == NULL)
-        return CANOPEN_ERROR;
-
     uint32_t id = (co->role == CANOPEN_CLIENT) ? SDO_RX : SDO_TX;
     id += co->node_id;
 
@@ -51,9 +47,6 @@ co_res_t co_sdo_send(co_obj_t *co, co_msg_t *msg, uint8_t cmd, uint16_t index, u
 
 co_res_t co_cli_proc_sdo(co_obj_t *co, co_msg_t *msg)
 {
-    msg->node = get_node_index(co, msg->id);
-    if (msg->node == NULL)
-        return CANOPEN_ERROR;
 
     if (msg->frame.sdo.cmd == SDO_REQ_ABORT) {
         return CANOPEN_ERROR;

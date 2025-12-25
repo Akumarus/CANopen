@@ -139,17 +139,13 @@ typedef union {
 } timeout_staus_t;
 
 typedef struct {
-    uint32_t timestamp;
+    bool online;
+    uint32_t time;
     uint32_t timeout;
-    bool received;
 } co_timeout_t;
 
 typedef struct {
     uint8_t id;
-    co_nmt_state_t nmt_state;
-    uint32_t heartbeat_timeout;
-    uint32_t last_heartbeat_time;
-    uint32_t online;
     co_timeout_t pdo;
     co_timeout_t sdo;
     co_timeout_t heartbeat;
@@ -161,7 +157,7 @@ typedef struct {
     uint8_t dlc;
     co_msg_type_t type;
     cob_frame_t frame;
-    co_node_t *node;
+    // co_node_t *node;
 } co_msg_t;
 
 #endif // DEF_H

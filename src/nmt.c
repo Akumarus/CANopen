@@ -124,11 +124,9 @@ co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd)
     msg.frame.nmt.cmd = cmd;
     msg.frame.nmt.node_id = node_id;
 
-    if (((cmd == NMT_CS_RESET) || (cmd == NMT_CS_COM_RESET)) && node_id != 0) {
-        co_node_t *node = get_node_index(co, node_id);
-        if (node)
-            node->online = false;
-    }
+    // if (((cmd == NMT_CS_RESET) || (cmd == NMT_CS_COM_RESET)) && node_id != 0) {
+    //     co_node_t *node = co_get_node_obj(co, node_id);
+    // }
 
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
@@ -141,7 +139,7 @@ co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg)
     assert(co->role == CANOPEN_CLIENT);
 
     uint8_t node_id = msg->id - HEARTBEAT;
-    co_node_t *node = get_node_index(co, node_id);
+    co_node_t *node = co_get_node_obj(co, node_id);
     if (node == NULL) {
         // TODO Можно самим добавить узел сети
         return CANOPEN_ERROR;
@@ -153,29 +151,13 @@ co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg)
     case NMT_STATE_RESETING:
     case NMT_STATE_OPERATIONAL:
     case NMT_STATE_PRE_OPERATIONAL:
-        node->nmt_state = msg->frame.nmt.cmd;
+        // node->nmt_state = msg->frame.nmt.cmd;
         break;
 
     default:
         return CANOPEN_ERROR;
     }
-    node->online = true;
-    node->last_heartbeat_time = co->timestamp; // TODO Проверить, то ли время
-    return CANOPEN_OK;
-}
-
-co_res_t canopen_client_timeout(co_obj_t *canopen, uint32_t current_time)
-{
-    assert(canopen != NULL);
-    assert(canopen->role == CANOPEN_CLIENT);
-
-    for (uint8_t i = 0; i < canopen->node_count; i++) {
-        co_node_t *node = &canopen->node[i];
-        if (node->online && node->heartbeat_timeout > 0) {
-            uint32_t time_since_last = current_time - node->last_heartbeat_time;
-            if (time_since_last > node->heartbeat_timeout)
-                node->online = false;
-        }
-    }
+    // node->online = true;
+    // node->last_heartbeat_time = co->timestamp; // TODO Проверить, то ли время
     return CANOPEN_OK;
 }
