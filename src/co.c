@@ -103,8 +103,8 @@ co_res_t co_process_msg_rx(co_obj_t *co)
             break;
         case TYPE_SYNC:
             break;
-        case TYPE_EMCY:
-            break;
+        // case TYPE_EMCY:
+        //     break;
         case TYPE_HEARTBEAT:
             co_cli_proc_heartbeat(co, &msg);
             node->heartbeat.time = current_time;
@@ -114,11 +114,11 @@ co_res_t co_process_msg_rx(co_obj_t *co)
         }
 
         // // TODO Нужно вынести в отдельную функцию
-        for (uint8_t i = 0; i < MAX_CALLBACKS; i++) {
-            if ((co->callbacks[i].id == msg.id) && (co->callbacks[i].callback != NULL)) {
-                co->callbacks[i].callback(&msg);
-            }
-        }
+        // for (uint8_t i = 0; i < MAX_CALLBACKS; i++) {
+        //     if ((co->callbacks[i].id == msg.id) && (co->callbacks[i].callback != NULL)) {
+        //         co->callbacks[i].callback(&msg);
+        //     }
+        // }
     }
 
     return CANOPEN_OK;
@@ -187,6 +187,7 @@ co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo)
     assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
 
     port_can_receive_message(&msg->id, msg->frame.row, &msg->dlc, fifo);
+    msg->type = msg->id & 0x780;
     return CANOPEN_OK;
 }
 
