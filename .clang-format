@@ -4,7 +4,7 @@ TabWidth: 4
 UseTab: Never
 ColumnLimit: 100
 
-BreakBeforeBraces: Linux
+BreakBeforeBraces: Custom
 BraceWrapping:
   AfterFunction: false
   AfterStruct: true

@@ -18,19 +18,19 @@
 #define CANOPEN_TIMEOUT 1000
 
 typedef enum {
-    NMT = 0x000,
-    SYNC_MESSAGE = 0x080,
-    EMERGENCY_START = 0x080,
-    TIME_MESSAGE = 0x100,
-    PDO1 = 0x180,
-    PDO2 = 0x280,
-    PDO3 = 0x380,
-    PDO4 = 0x480,
-    SDO_RX = 0x580,
-    SDO_TX = 0x600,
-    HEARTBEAT = 0x700,
-    LSS_TX = 0x7E4, // TODO Посмотреть, что это
-    LSS_RX = 0x7E5,
+    COB_ID_NMT = 0x000,
+    COB_ID_SYNC_MESSAGE = 0x080,
+    COB_ID_EMERGENCY_START = 0x080,
+    COB_ID_TIME_MESSAGE = 0x100,
+    COB_ID_PDO1 = 0x180,
+    COB_ID_PDO2 = 0x280,
+    COB_ID_PDO3 = 0x380,
+    COB_ID_PDO4 = 0x480,
+    COB_ID_SDO_RX = 0x580,
+    COB_ID_SDO_TX = 0x600,
+    COB_ID_HEARTBEAT = 0x700,
+    COB_ID_LSS_TX = 0x7E4, // TODO Посмотреть, что это
+    COB_ID_LSS_RX = 0x7E5,
 } canopen_fc_t;
 
 typedef enum {
@@ -75,23 +75,28 @@ typedef enum {
     CANOPEN_ERROR,
 } co_res_t;
 
-typedef struct {
-    union {
+typedef struct
+{
+    union
+    {
         uint64_t u64;
 
-        struct {
+        struct
+        {
             uint32_t low;
             uint32_t high;
         };
 
-        struct {
+        struct
+        {
             uint16_t word0;
             uint16_t word1;
             uint16_t word2;
             uint16_t word3;
         };
 
-        struct {
+        struct
+        {
             uint8_t byte0;
             uint8_t byte1;
             uint8_t byte2;
@@ -106,20 +111,23 @@ typedef struct {
 
 static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
-typedef struct {
+typedef struct
+{
     uint8_t cmd;       // 1 байт
     uint16_t index;    // 2-3 байты
     uint8_t sub_index; // 4 байт
     uint32_t data;     // 5-8 байты
 } co_sdo_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t cmd;
     uint8_t node_id;
 } co_nmt_t;
 
 #pragma pack(push, 1)
-typedef union {
+typedef union
+{
     uint8_t row[COB_SIZE_PDO];
     co_nmt_t nmt;
     co_pdo_t pdo;
@@ -127,9 +135,11 @@ typedef union {
 } cob_frame_t;
 #pragma pack(pop)
 
-typedef union {
+typedef union
+{
     uint16_t all;
-    struct {
+    struct
+    {
         uint16_t sdo_pending : 1;
         uint16_t pdo_pending : 1;
         uint16_t nmt_pending : 1;
@@ -137,13 +147,15 @@ typedef union {
     } bit;
 } timeout_staus_t;
 
-typedef struct {
+typedef struct
+{
     bool online;
     uint32_t time;
     uint32_t timeout;
 } co_timeout_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t id;
     co_timeout_t pdo;
     co_timeout_t sdo;
@@ -151,7 +163,8 @@ typedef struct {
     // canopen_nmt_state_t nmt_state; // TODO расширить и на PDO + SDO
 } co_node_t;
 
-typedef struct {
+typedef struct
+{
     uint32_t id;
     uint8_t dlc;
     co_msg_type_t type;

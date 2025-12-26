@@ -32,25 +32,41 @@
 /* └────────────────┴─────────────┴─────────────┘ */
 
 typedef enum {
-    PDO_NUM_1 = 1,
-    PDO_NUM_2 = 2,
-    PDO_NUM_3 = 3,
-    PDO_NUM_4 = 4,
+    PDO1 = 1,
+    PDO2 = 2,
+    PDO3 = 3,
+    PDO4 = 4,
 } pdo_num_t;
 
-/* PDO Messages -------------------------------------------------*/
-#define co_pdo1_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_1, node_id, msg, dlc)
-#define co_pdo2_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_2, node_id, msg, dlc)
-#define co_pdo3_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_3, node_id, msg, dlc)
-#define co_pdo4_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO_NUM_4, node_id, msg, dlc)
-
-#define co_pdo1_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_1, node_id, callback)
-#define co_pdo2_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_2, node_id, callback)
-#define co_pdo3_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_3, node_id, callback)
-#define co_pdo4_cfg_rx(co, node_id, callback) co_pdo_cfg_rx(co, PDO_NUM_4, node_id, callback)
+co_res_t co_rpdo_subscribe(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_hdl_t callback);
+co_res_t co_tpdo_publish(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_pdo_t *data,
+                         uint8_t dlc);
 
 co_res_t co_pdo_send(co_obj_t *co, co_msg_t *msg, co_pdo_t *data);
-co_res_t co_pdo_cfg_rx(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_hdl_t callback);
+co_res_t co_config_pdo(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_hdl_t callback);
 co_res_t co_pdo_cfg_tx(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_msg_t *msg,
                        uint8_t dlc);
+
+/* PDO Messages -------------------------------------------------*/
+inline co_res_t co_config_pdo1(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
+    return co_config_pdo(co, PDO1, node_id, callback);
+}
+
+inline co_res_t co_config_pdo2(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
+    return co_config_pdo(co, PDO2, node_id, callback);
+}
+
+inline co_res_t co_config_pdo3(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
+    return co_config_pdo(co, PDO3, node_id, callback);
+}
+
+inline co_res_t co_config_pdo4(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
+    return co_config_pdo(co, PDO4, node_id, callback);
+}
+
+#define co_pdo1_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO1, node_id, msg, dlc)
+#define co_pdo2_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO2, node_id, msg, dlc)
+#define co_pdo3_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO3, node_id, msg, dlc)
+#define co_pdo4_cfg_tx(co, msg, node_id, dlc) co_pdo_cfg_tx(co, PDO4, node_id, msg, dlc)
+
 #endif // PDO_H

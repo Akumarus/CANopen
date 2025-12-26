@@ -121,8 +121,7 @@ co_obj_t canopen_server;
 #define NODE_ID_PLATE2 2
 #define NODE_ID_PLATE3 3
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     // TODO нужно спрятать под капот определение инстанса
     co_msg_t msg;
     canopen_get_msg_from_handler(&msg, CAN_RX_FIFO0);
@@ -138,8 +137,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     }
 }
 
-void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
+void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     uint8_t node_id;
     co_msg_t msg = {0};
     canopen_get_msg_from_handler(&msg, CAN_RX_FIFO1);
@@ -167,15 +165,13 @@ co_msg_t pdo1 = {0};
 uint32_t pdo0_id = 0x00000100;
 uint32_t pdo1_id = 0x00000200;
 
-void pdo1_callback(co_msg_t *msg)
-{
+void pdo1_callback(co_msg_t *msg) {
     // uint16_t lol = 0;
 }
 
 void sdo_callback(co_msg_t *msg) {}
 
-void pdo22_send()
-{
+void pdo22_send() {
     // pdo1.frame.pdo.data[0] = 10;
     // pdo2.frame.pdo.data[1] = 11;
     // co_pdo_send(&canopen, &pdo1);
@@ -189,8 +185,7 @@ void pdo22_send()
  * @brief  The application entry point.
  * @retval int
  */
-int main(void)
-{
+int main(void) {
 
     /* USER CODE BEGIN 1 */
 
@@ -224,8 +219,8 @@ int main(void)
     co_config_node_id(&canopen_client, NODE_ID_PLATE1);
 
     /* Конфигурация PDO сообщений */
-    co_pdo1_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
-    co_pdo2_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+    // co_pdo1_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
+    // co_pdo2_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
 
     /* Конфигурация SDO сообщений */
     co_sdo_cfg(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
@@ -274,8 +269,7 @@ int main(void)
  * @brief System Clock Configuration
  * @retval None
  */
-void SystemClock_Config(void)
-{
+void SystemClock_Config(void) {
     RCC_OscInitTypeDef RCC_OscInitStruct = {0};
     RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
@@ -315,8 +309,7 @@ void SystemClock_Config(void)
  * @brief  This function is executed in case of error occurrence.
  * @retval None
  */
-void Error_Handler(void)
-{
+void Error_Handler(void) {
     /* USER CODE BEGIN Error_Handler_Debug */
     /* User can add his own implementation to report the HAL error return state
      */
@@ -333,8 +326,7 @@ void Error_Handler(void)
  * @param  line: assert_param error line source number
  * @retval None
  */
-void assert_failed(uint8_t *file, uint32_t line)
-{
+void assert_failed(uint8_t *file, uint32_t line) {
     /* USER CODE BEGIN 6 */
     /* User can add his own implementation to report the file name and line
        number, ex: printf("Wrong parameters value: file %s on line %d\r\n",

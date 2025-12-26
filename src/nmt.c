@@ -5,12 +5,11 @@
 #define BOOTUP_CMD 0x05
 #define HEARTBEAT_CMD 0x00
 
-co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg)
-{
+co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg) {
     assert(co != NULL);
     assert(co->role != CANOPEN_CLIENT);
 
-    uint8_t node_id = msg->id - NMT;
+    uint8_t node_id = msg->id - COB_ID_NMT;
     if ((node_id != co->node_id) && (node_id != 0))
         return CANOPEN_ERROR; // TODO Нужно вернуть, что фильтр неправильно
                               // сконфигурирован или может это норма
@@ -53,14 +52,13 @@ co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg)
     return CANOPEN_OK;
 }
 
-co_res_t co_nmt_send_bootup(co_obj_t *co)
-{
+co_res_t co_nmt_send_bootup(co_obj_t *co) {
     assert(co != NULL);
     assert(co->role == CANOPEN_SERVER);
 
     co_msg_t msg;
     memset(&msg, 0, sizeof(co_msg_t));
-    msg.id = HEARTBEAT + co->node_id;
+    msg.id = COB_ID_HEARTBEAT + co->node_id;
     msg.dlc = 1;
     msg.type = TYPE_NMT;
     msg.frame.nmt.cmd = BOOTUP_CMD; // TODO чему должно быть равно
@@ -69,8 +67,7 @@ co_res_t co_nmt_send_bootup(co_obj_t *co)
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }
 
-co_res_t co_nmt_send_heartbeat(co_obj_t *co)
-{
+co_res_t co_nmt_send_heartbeat(co_obj_t *co) {
     assert(co != NULL);
     assert(co->role == CANOPEN_SERVER);
 
@@ -80,7 +77,7 @@ co_res_t co_nmt_send_heartbeat(co_obj_t *co)
 
     co_msg_t msg;
     memset(&msg, 0, sizeof(co_msg_t));
-    msg.id = HEARTBEAT + co->node_id;
+    msg.id = COB_ID_HEARTBEAT + co->node_id;
     msg.dlc = 1;
     msg.type = TYPE_HEARTBEAT;
     msg.frame.nmt.cmd = co->nmt_state;
@@ -88,8 +85,7 @@ co_res_t co_nmt_send_heartbeat(co_obj_t *co)
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }
 
-co_res_t canopen_server_timeout(co_obj_t *canopen, uint32_t current_time)
-{
+co_res_t canopen_server_timeout(co_obj_t *canopen, uint32_t current_time) {
     assert(canopen != NULL);
     assert(canopen->role == CANOPEN_SERVER);
 
@@ -111,14 +107,13 @@ co_res_t canopen_server_timeout(co_obj_t *canopen, uint32_t current_time)
     return CANOPEN_OK;
 }
 
-co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd)
-{
+co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd) {
     assert(co != NULL);
     assert(co->role == CANOPEN_CLIENT);
 
     co_msg_t msg;
     memset(&msg, 0, sizeof(co_msg_t));
-    msg.id = NMT;
+    msg.id = COB_ID_NMT;
     msg.dlc = 2;
     msg.type = TYPE_NMT;
     msg.frame.nmt.cmd = cmd;
@@ -132,13 +127,12 @@ co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd)
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }
 
-co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg)
-{
+co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg) {
     assert(co != NULL);
     assert(msg != NULL);
     assert(co->role == CANOPEN_CLIENT);
 
-    uint8_t node_id = msg->id - HEARTBEAT;
+    uint8_t node_id = msg->id - COB_ID_HEARTBEAT;
     co_node_t *node = co_get_node_obj(co, node_id);
     if (node == NULL) {
         // TODO Можно самим добавить узел сети
