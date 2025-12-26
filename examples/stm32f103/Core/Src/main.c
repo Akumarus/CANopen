@@ -234,8 +234,8 @@ int main(void) {
     co_config_node_id(&canopen_server, NODE_ID_PLATE3);
 
     /* Конфигурация PDO сообщений */
-    co_pdo1_cfg_tx(&canopen_server, &pdo0, NODE_ID_PLATE2, 8);
-    co_pdo2_cfg_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
+    // co_pdo1_cfg_tx(&canopen_server, &pdo0, NODE_ID_PLATE2, 8);
+    // co_pdo2_cfg_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
 
     /* Конфигурация SDO сообщений */
     co_sdo_cfg(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
