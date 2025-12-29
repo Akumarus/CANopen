@@ -160,6 +160,7 @@ typedef struct
     co_timeout_t pdo;
     co_timeout_t sdo;
     co_timeout_t heartbeat;
+    co_nmt_state_t state;
     // canopen_nmt_state_t nmt_state; // TODO расширить и на PDO + SDO
 } co_node_t;
 

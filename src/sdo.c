@@ -18,9 +18,9 @@ co_res_t co_sdo_cfg(co_obj_t *co, co_msg_t *msg, uint8_t node_id, co_hdl_t callb
 
     memset(msg, 0, sizeof(co_msg_t));
 
+    msg->type = (co->role == CANOPEN_CLIENT) ? TYPE_SDO_TX : TYPE_SDO_RX;
     msg->id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_TX : COB_ID_SDO_RX;
     msg->id += node_id;
-    msg->type = (co->role == CANOPEN_CLIENT) ? TYPE_SDO_TX : TYPE_SDO_RX;
     msg->dlc = COB_SIZE_SDO;
 
     uint32_t id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_RX : COB_ID_SDO_TX;

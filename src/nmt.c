@@ -18,32 +18,27 @@ co_res_t co_srv_proc_nmt(co_obj_t *co, co_msg_t *msg) {
     case NMT_CS_START:
         if (co->nmt_state == NMT_STATE_PRE_OPERATIONAL || co->nmt_state == NMT_STATE_STOPPED) {
             co->nmt_state = NMT_STATE_OPERATIONAL;
-            co_nmt_send_heartbeat(co);
         }
         break;
     case NMT_CS_STOP:
         if (co->nmt_state == NMT_STATE_OPERATIONAL || co->nmt_state == NMT_STATE_PRE_OPERATIONAL) {
             co->nmt_state = NMT_STATE_STOPPED;
-            co_nmt_send_heartbeat(co);
         }
         break;
     case NMT_CS_PREOP:
         if (co->nmt_state == NMT_STATE_OPERATIONAL || co->nmt_state == NMT_STATE_STOPPED) {
             co->nmt_state = NMT_STATE_PRE_OPERATIONAL;
-            co_nmt_send_heartbeat(co);
         }
         break;
     case NMT_CS_RESET:
         co->nmt_state = NMT_CS_RESET;
         // Логика сброса узла
-        co_nmt_send_heartbeat(co);
         break;
 
     case NMT_CS_COM_RESET:
         co->nmt_state = NMT_CS_COM_RESET;
         // Логика сброса настроек сети
         // canopen_tran
-        co_nmt_send_heartbeat(co);
         break;
     default:
         return CANOPEN_ERROR;
@@ -56,31 +51,12 @@ co_res_t co_nmt_send_bootup(co_obj_t *co) {
     assert(co != NULL);
     assert(co->role == CANOPEN_SERVER);
 
-    co_msg_t msg;
-    memset(&msg, 0, sizeof(co_msg_t));
+    co_msg_t msg = {0};
     msg.id = COB_ID_HEARTBEAT + co->node_id;
     msg.dlc = 1;
     msg.type = TYPE_NMT;
     msg.frame.nmt.cmd = BOOTUP_CMD; // TODO чему должно быть равно
     co->nmt_state = NMT_STATE_PRE_OPERATIONAL;
-    fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
-    return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
-}
-
-co_res_t co_nmt_send_heartbeat(co_obj_t *co) {
-    assert(co != NULL);
-    assert(co->role == CANOPEN_SERVER);
-
-    if (!co->heartbeat_enable || co->nmt_state == NMT_STATE_BOOTUP ||
-        co->nmt_state == NMT_STATE_RESETING)
-        return CANOPEN_OK;
-
-    co_msg_t msg;
-    memset(&msg, 0, sizeof(co_msg_t));
-    msg.id = COB_ID_HEARTBEAT + co->node_id;
-    msg.dlc = 1;
-    msg.type = TYPE_HEARTBEAT;
-    msg.frame.nmt.cmd = co->nmt_state;
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }
@@ -94,13 +70,6 @@ co_res_t canopen_server_timeout(co_obj_t *canopen, uint32_t current_time) {
         return CANOPEN_OK;
     }
 
-    if (canopen->heartbeat_enable && canopen->nmt_state != NMT_STATE_BOOTUP &&
-        canopen->nmt_state != NMT_STATE_RESETING) {
-        uint32_t elapsed = current_time - canopen->last_heartbeat_time;
-        if (elapsed > canopen->heartbeat_interval_ms)
-            co_nmt_send_heartbeat(canopen);
-    }
-
     if (canopen->nmt_state == NMT_STATE_RESETING) {
         // TODO Что-то делаем
     }
@@ -111,8 +80,7 @@ co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd) {
     assert(co != NULL);
     assert(co->role == CANOPEN_CLIENT);
 
-    co_msg_t msg;
-    memset(&msg, 0, sizeof(co_msg_t));
+    co_msg_t msg = {0};
     msg.id = COB_ID_NMT;
     msg.dlc = 2;
     msg.type = TYPE_NMT;
@@ -125,33 +93,4 @@ co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd) {
 
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
-}
-
-co_res_t co_cli_proc_heartbeat(co_obj_t *co, co_msg_t *msg) {
-    assert(co != NULL);
-    assert(msg != NULL);
-    assert(co->role == CANOPEN_CLIENT);
-
-    uint8_t node_id = msg->id - COB_ID_HEARTBEAT;
-    co_node_t *node = co_get_node_obj(co, node_id);
-    if (node == NULL) {
-        // TODO Можно самим добавить узел сети
-        return CANOPEN_ERROR;
-    }
-
-    switch (msg->frame.nmt.cmd) {
-    case NMT_STATE_BOOTUP:
-    case NMT_STATE_STOPPED:
-    case NMT_STATE_RESETING:
-    case NMT_STATE_OPERATIONAL:
-    case NMT_STATE_PRE_OPERATIONAL:
-        // node->nmt_state = msg->frame.nmt.cmd;
-        break;
-
-    default:
-        return CANOPEN_ERROR;
-    }
-    // node->online = true;
-    // node->last_heartbeat_time = co->timestamp; // TODO Проверить, то ли время
-    return CANOPEN_OK;
 }

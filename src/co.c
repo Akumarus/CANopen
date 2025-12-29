@@ -106,7 +106,7 @@ co_res_t co_process_msg_rx(co_obj_t *co)
         // case TYPE_EMCY:
         //     break;
         case TYPE_HEARTBEAT:
-            co_cli_proc_heartbeat(co, &msg);
+            // co_cli_proc_heartbeat(co, &msg);
             node->heartbeat.time = current_time;
             break;
         default:
