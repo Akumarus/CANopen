@@ -113,10 +113,10 @@ static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for 
 
 typedef struct
 {
-    uint8_t cmd;       // 1 байт
-    uint16_t index;    // 2-3 байты
-    uint8_t sub_index; // 4 байт
-    uint32_t data;     // 5-8 байты
+    uint8_t cmd;   // 1 байт
+    uint16_t idx;  // 2-3 байты
+    uint8_t sidx;  // 4 байт
+    uint32_t data; // 5-8 байты
 } co_sdo_t;
 
 typedef struct

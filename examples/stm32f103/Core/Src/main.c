@@ -223,7 +223,7 @@ int main(void) {
     // co_pdo2_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
 
     /* Конфигурация SDO сообщений */
-    co_sdo_cfg(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
+    // co_sdo_cfg(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
     /*=======================================================================================*/
 
     /*CANopen SERVER
@@ -238,7 +238,7 @@ int main(void) {
     // co_pdo2_cfg_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
 
     /* Конфигурация SDO сообщений */
-    co_sdo_cfg(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
+    // co_sdo_cfg(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
     /*=======================================================================================*/
 
     HAL_TIM_Base_Start_IT(&htim1);
@@ -250,7 +250,7 @@ int main(void) {
         // co_pdo_data_t pdo_data = {0};
         // pdo_data.word1 = 12345;
 
-        canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1010, 0);
+        // canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1010, 0);
 
         co_process_msg_rx(&canopen_server);
         co_process_msg_tx(&canopen_server);
