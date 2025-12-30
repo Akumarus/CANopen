@@ -67,13 +67,12 @@ co_res_t co_server_process_sdo(co_obj_t *co, co_msg_t *msg) {
 }
 
 static co_res_t co_process_upload_sdo(co_obj_t *co, co_msg_t *msg) {
-    uint16_t data_size = object_dictionary_get_size(msg->frame.sdo.idx, msg->frame.sdo.sidx);
+    uint16_t data_size = co_od_size(msg->frame.sdo.idx, msg->frame.sdo.sidx);
     if (data_size == 0) {
         uint8_t id = (msg->id - COB_ID_SDO_TX) + COB_ID_SDO_RX;
         return co_abort(co, id, msg->frame.sdo.idx, msg->frame.sdo.sidx, SDO_ABORT_OBJ_NOT_EXIST);
     } else if (data_size <= 4) {
-        object_dictionary_read(msg->frame.sdo.idx, msg->frame.sdo.sidx, &msg->frame.sdo.data,
-                               sizeof(uint32_t));
+        co_od_read(msg->frame.sdo.idx, msg->frame.sdo.sidx, &msg->frame.sdo.data, sizeof(uint32_t));
         SDO_SET_SERVER_ID(msg);
     }
     return CANOPEN_OK;

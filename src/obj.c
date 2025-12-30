@@ -1,188 +1,161 @@
 #include "obj.h"
 #include "params.h"
 
-/* Объявление статических функцийы */
-static od_type *object_dictionary_find(uint16_t index, uint8_t sub_index);
-static bool object_dictionary_validate_limits(const od_type *obj, void *data);
-static uint32_t object_dictionary_size(const od_type *obj);
+static co_od_t *co_od_item_find(uint16_t index, uint8_t sub_index);
+static bool co_od_item_validate(const co_od_t *obj, void *data);
+static uint32_t co_od_item_size(const co_od_t *obj);
 
-/* Чтение объекта из словаря */
-uint32_t object_dictionary_read(uint16_t index, uint8_t sub_index, void *data, uint32_t size)
-{
+uint32_t co_od_read(uint16_t index, uint8_t sub_index, void *data, uint32_t size) {
+    assert(data != NULL);
+    assert(size != 0);
 
-  // TODO Проверка на sub_index
-  if (data == NULL || size == 0)
-    return 0;
+    co_od_t *obj = co_od_item_find(index, sub_index);
+    if (obj == NULL)
+        return 0;
 
-  od_type *obj = object_dictionary_find(index, sub_index);
-  if (obj == NULL)
-    return 0;
+    uint32_t obj_size = co_od_item_size(obj);
+    uint32_t copy_size = (size < obj_size) ? size : obj_size;
 
-  uint32_t obj_size = object_dictionary_size(obj);
-  uint32_t copy_size = (size < obj_size) ? size : obj_size;
+    memcpy(data, obj->pdata, copy_size);
+    if (obj->type == OD_TYPE_STRING)
+        ((char *)data)[copy_size - 1] = '\0';
 
-  memcpy(data, obj->data_ptr, copy_size);
-  if (obj->data_type == OD_TYPE_STRING)
-    ((char *)data)[copy_size - 1] = '\0';
-
-  return copy_size;
+    return copy_size;
 }
 
-/* Запись значения в объект словаря */
-uint32_t object_dictionary_write(uint16_t index, uint8_t sub_index, void *data, uint32_t size)
-{
-  if (data == NULL || size == 0)
-    return 0;
+uint32_t co_od_write(uint16_t index, uint8_t sub_index, void *data, uint32_t size) {
+    assert(data != NULL);
+    assert(size != 0);
 
-  od_type *obj = object_dictionary_find(index, sub_index);
-  if (obj == NULL)
-    return 0;
+    co_od_t *obj = co_od_item_find(index, sub_index);
+    if (obj == NULL)
+        return 0;
 
-  if (object_dictionary_validate_limits(obj, data) == true)
-    return 0;
+    if (co_od_item_validate(obj, data) == true)
+        return 0;
 
-  uint32_t obj_size = object_dictionary_size(obj);
-  if (size > obj_size)
-    return 0;
+    uint32_t obj_size = co_od_item_size(obj);
+    if (size > obj_size)
+        return 0;
 
-  memcpy(obj->data_ptr, data, size);
-  if (obj->data_type == OD_TYPE_STRING)
-    ((char *)obj->data_ptr)[size - 1] = '\0';
+    memcpy(obj->pdata, data, size);
+    if (obj->type == OD_TYPE_STRING)
+        ((char *)obj->pdata)[size - 1] = '\0';
 
-  return size;
+    return size;
 }
 
-/* получить размер объекта в словаре */
-uint32_t object_dictionary_get_size(uint16_t index, uint8_t sub_index)
-{
-  od_type *obj = object_dictionary_find(index, sub_index);
-  if (obj == NULL)
-    return 0;
+uint32_t co_od_size(uint16_t index, uint8_t sub_index) {
+    co_od_t *obj = co_od_item_find(index, sub_index);
+    if (obj == NULL)
+        return 0;
 
-  uint32_t size = object_dictionary_size(obj);
-  return size;
+    uint32_t size = co_od_item_size(obj);
+    return size;
 }
 
-/* КОличество объектов в словаре */
-uint16_t object_dictionary_get_count(void)
-{
-  return OBJECT_DICTIONARY_SIZE;
-}
+uint16_t co_od_count(void) { return OBJECT_DICTIONARY_SIZE; }
 
 /* Поиск объекта в словаре */
-static od_type *object_dictionary_find(uint16_t index, uint8_t sub_index)
-{
-  // TODO Нужно сделать быстрый перебор
-  for (uint16_t i = 0; i < OBJECT_DICTIONARY_SIZE; i++)
-  {
-    if (object_dictionary[i].index == index &&
-        object_dictionary[i].sub_index == sub_index)
-    {
-      return &object_dictionary[i];
+static co_od_t *co_od_item_find(uint16_t idx, uint8_t sidx) {
+    // TODO Нужно сделать быстрый перебор
+    for (uint16_t i = 0; i < OBJECT_DICTIONARY_SIZE; i++) {
+        if (object_dictionary[i].idx == idx && object_dictionary[i].sidx == sidx) {
+            return &object_dictionary[i];
+        }
     }
-  }
-  return NULL;
+    return NULL;
 }
 
 /* Проверка на выход за пределы максимального и минимального значения */
-static bool object_dictionary_validate_limits(const od_type *obj, void *data)
-{
-  if (obj == NULL || data == NULL)
-    return true;
+static bool co_od_item_validate(const co_od_t *obj, void *data) {
+    if (obj == NULL || data == NULL)
+        return true;
 
-  if (obj->data_type == OD_TYPE_STRING || obj->data_type == OD_TYPE_BOOL)
+    if (obj->type == OD_TYPE_STRING || obj->type == OD_TYPE_BOOL)
+        return false;
+
+    switch (obj->type) {
+    case OD_TYPE_INT8: {
+        int8_t value = *(int8_t *)data;
+        int8_t min_val = obj->min_val.i8;
+        int8_t max_val = obj->max_val.i8;
+        return (value >= min_val && value <= max_val);
+    }
+    case OD_TYPE_UINT8: {
+        uint8_t value = *(uint8_t *)data;
+        uint8_t min_val = obj->min_val.u8;
+        uint8_t max_val = obj->max_val.u8;
+        return (value >= min_val && value <= max_val);
+    }
+    case OD_TYPE_INT16: {
+        int16_t value = *(uint16_t *)data;
+        int16_t min_val = obj->min_val.i16;
+        int16_t max_val = obj->max_val.i16;
+        return (value >= min_val && value <= max_val);
+    }
+    case OD_TYPE_UINT16: {
+        uint16_t value = *(uint16_t *)data;
+        uint16_t min_val = obj->min_val.u16;
+        uint16_t max_val = obj->max_val.u16;
+        return (value >= min_val && value <= max_val);
+    }
+    case OD_TYPE_INT32: {
+        int32_t value = *(int32_t *)data;
+        int32_t min_val = obj->min_val.i32;
+        int32_t max_val = obj->max_val.i32;
+        return (value >= min_val && value <= max_val);
+    }
+    case OD_TYPE_UINT32: {
+        uint32_t value = *(uint32_t *)data;
+        uint32_t min_val = obj->min_val.u32;
+        uint32_t max_val = obj->max_val.u32;
+        return (value >= min_val && value <= max_val);
+    }
+    case OD_TYPE_FLOAT32: {
+        float value = *(float *)data;
+        float min_val = obj->min_val.f32;
+        float max_val = obj->max_val.f32;
+        return (value >= min_val && value <= max_val);
+    }
+    default:
+        break;
+    }
+
     return false;
-
-  switch (obj->data_type)
-  {
-  case OD_TYPE_INT8:
-  {
-    int8_t value = *(int8_t *)data;
-    int8_t min_val = obj->min_value.i8;
-    int8_t max_val = obj->max_value.i8;
-    return (value >= min_val && value <= max_val);
-  }
-  case OD_TYPE_UINT8:
-  {
-    uint8_t value = *(uint8_t *)data;
-    uint8_t min_val = obj->min_value.u8;
-    uint8_t max_val = obj->max_value.u8;
-    return (value >= min_val && value <= max_val);
-  }
-  case OD_TYPE_INT16:
-  {
-    int16_t value = *(uint16_t *)data;
-    int16_t min_val = obj->min_value.i16;
-    int16_t max_val = obj->max_value.i16;
-    return (value >= min_val && value <= max_val);
-  }
-  case OD_TYPE_UINT16:
-  {
-    uint16_t value = *(uint16_t *)data;
-    uint16_t min_val = obj->min_value.u16;
-    uint16_t max_val = obj->max_value.u16;
-    return (value >= min_val && value <= max_val);
-  }
-  case OD_TYPE_INT32:
-  {
-    int32_t value = *(int32_t *)data;
-    int32_t min_val = obj->min_value.i32;
-    int32_t max_val = obj->max_value.i32;
-    return (value >= min_val && value <= max_val);
-  }
-  case OD_TYPE_UINT32:
-  {
-    uint32_t value = *(uint32_t *)data;
-    uint32_t min_val = obj->min_value.u32;
-    uint32_t max_val = obj->max_value.u32;
-    return (value >= min_val && value <= max_val);
-  }
-  case OD_TYPE_FLOAT32:
-  {
-    float value = *(float *)data;
-    float min_val = obj->min_value.f32;
-    float max_val = obj->max_value.f32;
-    return (value >= min_val && value <= max_val);
-  }
-  default:
-    break;
-  }
-
-  return false;
 }
 
-static uint32_t object_dictionary_size(const od_type *obj)
-{
-  uint32_t size;
-  switch (obj->data_type)
-  {
-  case OD_TYPE_INT8:
-    size = sizeof(int8_t);
-    break;
-  case OD_TYPE_UINT8:
-    size = sizeof(uint8_t);
-    break;
-  case OD_TYPE_INT16:
-    size = sizeof(int16_t);
-    break;
-  case OD_TYPE_UINT16:
-    size = sizeof(uint16_t);
-    break;
-  case OD_TYPE_INT32:
-    size = sizeof(int32_t);
-    break;
-  case OD_TYPE_UINT32:
-    size = sizeof(uint32_t);
-    break;
-  case OD_TYPE_FLOAT32:
-    size = sizeof(float);
-    break;
-  case OD_TYPE_BOOL:
-    size = sizeof(bool);
-    break;
-  case OD_TYPE_STRING:
-    size = strlen(obj->data_ptr);
-    break;
-  }
-  return size;
+// TODO Можно сдлеть компактней
+static uint32_t co_od_item_size(const co_od_t *obj) {
+    uint32_t size;
+    switch (obj->type) {
+    case OD_TYPE_INT8:
+        size = sizeof(int8_t);
+        break;
+    case OD_TYPE_UINT8:
+        size = sizeof(uint8_t);
+        break;
+    case OD_TYPE_INT16:
+        size = sizeof(int16_t);
+        break;
+    case OD_TYPE_UINT16:
+        size = sizeof(uint16_t);
+        break;
+    case OD_TYPE_INT32:
+        size = sizeof(int32_t);
+        break;
+    case OD_TYPE_UINT32:
+        size = sizeof(uint32_t);
+        break;
+    case OD_TYPE_FLOAT32:
+        size = sizeof(float);
+        break;
+    case OD_TYPE_BOOL:
+        size = sizeof(bool);
+        break;
+    case OD_TYPE_STRING:
+        size = strlen(obj->pdata);
+        break;
+    }
+    return size;
 }

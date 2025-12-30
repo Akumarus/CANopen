@@ -81,7 +81,7 @@ device_data_t device_data = {.error_register = 0,
                              .temperature = 25,
                              .error_history = {0}};
 
-od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
+co_od_t object_dictionary[OBJECT_DICTIONARY_SIZE] = {
     /* --------------------------------------------------------------------------------------------------------------------------
      */
     /* | Parameter name   | Index | Sub index |   Data type     | Flag  | Data
@@ -89,28 +89,28 @@ od_type object_dictionary[OBJECT_DICTIONARY_SIZE] = {
     /* --------------------------------------------------------------------------------------------------------------------------
      */
     {"Error register  ",
+     &device_data.error_register,
      0x1000,
      0x00,
      OD_TYPE_UINT32,
      OD_RO,
-     &device_data.error_register,
      {0},
      {.u32 = 0xFFFFFFFF}},
     {"Error history[0]",
+     &device_data.error_history[0],
      0x1001,
      0x00,
      OD_TYPE_INT8,
      OD_RO,
-     &device_data.error_history[0],
      {0},
      {.i8 = 127}},
-    {"Device Name     ", 0x1008, 0x00, OD_TYPE_STRING, OD_RO, &device_data.device_name, {0}, {0}},
+    {"Device Name     ", &device_data.device_name, 0x1008, 0x00, OD_TYPE_STRING, OD_RO, {0}, {0}},
     {"Heartbeat_time  ",
+     &device_data.heartbeat_time,
      0x1010,
      0x00,
      OD_TYPE_UINT32,
      OD_RO,
-     &device_data.heartbeat_time,
      {0},
      {.u32 = 0xFFFFFFFF}}};
 
