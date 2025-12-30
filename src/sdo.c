@@ -2,7 +2,7 @@
 #include "obj.h"
 #include "port.h"
 
-// static co_res_t co_sdo_upload(co_obj_t *co, co_msg_t *msg);
+static co_res_t co_process_upload_sdo(co_obj_t *co, co_msg_t *msg);
 // static co_res_t co_sdo_download(co_obj_t *co, co_msg_t *msg);
 // static co_res_t co_sdo_abort(co_obj_t *co, co_msg_t *msg, uint32_t abort_code);
 
@@ -47,7 +47,7 @@ co_res_t co_server_process_sdo(co_obj_t *co, co_msg_t *msg) {
 
     switch (msg->frame.sdo.cmd) {
     case SDO_REQ_UPLOAD:
-        // co_sdo_upload(co, msg);
+        co_process_upload_sdo(co, msg);
         break;
     case SDO_REQ_WRITE_1BYTE:
     case SDO_REQ_WRITE_2BYTE:
@@ -70,16 +70,17 @@ static co_res_t co_process_upload_sdo(co_obj_t *co, co_msg_t *msg) {
     uint16_t data_size = co_od_size(msg->frame.sdo.idx, msg->frame.sdo.sidx);
     if (data_size == 0) {
         uint8_t id = (msg->id - COB_ID_SDO_TX) + COB_ID_SDO_RX;
-        return co_abort(co, id, msg->frame.sdo.idx, msg->frame.sdo.sidx, SDO_ABORT_OBJ_NOT_EXIST);
+        co_abort_sdo(co, id, msg->frame.sdo.idx, msg->frame.sdo.sidx, SDO_ABORT_OBJ_NOT_EXIST);
+        return CANOPEN_ERROR;
     } else if (data_size <= 4) {
         co_od_read(msg->frame.sdo.idx, msg->frame.sdo.sidx, &msg->frame.sdo.data, sizeof(uint32_t));
         SDO_SET_SERVER_ID(msg);
     }
     return CANOPEN_OK;
 
-    // return canopen_sdo_transmit(canopen, msg, SDO_RESP_UPLOAD_DATA,
-    // msg->frame.sdo.index, msg->frame.sdo.sub_index, msg->frame.sdo.data);
-    return CANOPEN_OK;
+    // return canopen_sdo_transmit(canopen, msg, SDO_RESP_UPLOAD_DATA, msg->frame.sdo.index,
+    //                             msg->frame.sdo.sub_index, msg->frame.sdo.data);
+    // return CANOPEN_OK;
 }
 
 // static co_res_t co_sdo_download(co_obj_t *co, co_msg_t *msg) {
