@@ -35,7 +35,7 @@ add_executable(${CMAKE_PROJECT_NAME})
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
-
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_BINARY_DIR}/canopen)
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
@@ -44,20 +44,12 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/heartbeat.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/filter.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../src/port.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/fifo.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/pdo.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/sdo.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/obj.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/nmt.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../src/co.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../inc
+    # ${CMAKE_CURRENT_SOURCE_DIR}/../../inc
 
     # Add user defined include paths
 )
@@ -75,6 +67,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
-
+    canopen
     # Add user defined libraries
 )
