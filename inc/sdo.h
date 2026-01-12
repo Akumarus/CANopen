@@ -90,51 +90,51 @@ typedef enum {
 } co_abort_code_t;
 
 co_res_t co_subscribe_sdo(co_obj_t *co, uint8_t node_id, co_hdl_t callback);
-co_res_t co_transmite_sdo(co_obj_t *co, uint8_t node_id, co_msg_t *msg, uint8_t dlc);
+co_res_t co_transmite_sdo(co_obj_t *co, uint8_t node_id, co_sdo_t *data, uint8_t dlc);
 co_res_t co_server_process_sdo(co_obj_t *co, co_msg_t *msg);
 co_res_t co_client_process_sdo(co_obj_t *co, co_msg_t *msg);
 
 /**  Запросы прервать операцию  ------------------------------------------------------------*/
 static inline co_res_t co_abort_sdo(co_obj_t *co, uint8_t node_id, uint16_t idx, uint8_t sidx,
                                     uint32_t data) {
-    co_msg_t msg = {.frame.sdo = {SDO_REQ_ABORT, idx, sidx, data}};
-    return co_transmite_sdo(co, node_id, &msg, 8);
+    co_sdo_t sdo = {SDO_REQ_ABORT, idx, sidx, data};
+    return co_transmite_sdo(co, node_id, &sdo, 8);
 }
 
 /**  Запросы на чтение из od 8/16/32 бит ---------------------------------------------------*/
 static inline co_res_t co_read_sdo_8bit(co_obj_t *co, uint8_t node_id, uint16_t idx, uint8_t sidx) {
-    co_msg_t msg = {.frame.sdo = {SDO_REQ_UPLOAD, idx, sidx, 0}};
-    return co_transmite_sdo(co, node_id, &msg, 5);
+    co_sdo_t sdo = {SDO_REQ_UPLOAD, idx, sidx, 0};
+    return co_transmite_sdo(co, node_id, &sdo, 5);
 }
 
 static inline co_res_t co_read_sdo_16bit(co_obj_t *co, uint8_t node_id, uint16_t idx,
                                          uint8_t sidx) {
-    co_msg_t msg = {.frame.sdo = {SDO_REQ_UPLOAD, idx, sidx, 0}};
-    return co_transmite_sdo(co, node_id, &msg, 6);
+    co_sdo_t sdo = {SDO_REQ_UPLOAD, idx, sidx, 0};
+    return co_transmite_sdo(co, node_id, &sdo, 6);
 }
 
 static inline co_res_t co_read_sdo_32bit(co_obj_t *co, uint8_t node_id, uint16_t idx,
                                          uint8_t sidx) {
-    co_msg_t msg = {.frame.sdo = {SDO_REQ_UPLOAD, idx, sidx, 0}};
-    return co_transmite_sdo(co, node_id, &msg, 8);
+    co_sdo_t sdo = {SDO_REQ_UPLOAD, idx, sidx, 0};
+    return co_transmite_sdo(co, node_id, &sdo, 8);
 }
 
 /**  Запросы на запись в od 8/16/32 бит ----------------------------------------------------*/
 static inline co_res_t co_write_sdo_8bit(co_obj_t *co, uint8_t node_id, uint16_t idx, uint8_t sidx,
                                          uint32_t data) {
-    co_msg_t msg = {.frame.sdo = {SDO_REQ_WRITE_1BYTE, idx, sidx, data}};
-    return co_transmite_sdo(co, node_id, &msg, 5);
+    co_sdo_t sdo = {SDO_REQ_WRITE_1BYTE, idx, sidx, data};
+    return co_transmite_sdo(co, node_id, &sdo, 5);
 }
 
 static inline co_res_t co_write_sdo_16bit(co_obj_t *co, uint8_t node_id, uint16_t idx, uint8_t sidx,
                                           uint32_t data) {
-    co_msg_t msg = {.frame.sdo = {SDO_REQ_WRITE_2BYTE, idx, sidx, data}};
-    return co_transmite_sdo(co, node_id, &msg, 6);
+    co_sdo_t sdo = {SDO_REQ_WRITE_2BYTE, idx, sidx, data};
+    return co_transmite_sdo(co, node_id, &sdo, 6);
 }
 
 static inline co_res_t co_write_sdo_32bit(co_obj_t *co, uint8_t node_id, uint16_t idx, uint8_t sidx,
                                           uint32_t data) {
-    co_msg_t msg = {.frame.sdo = {SDO_REQ_WRITE_4BYTE, idx, sidx, data}};
-    return co_transmite_sdo(co, node_id, &msg, 8);
+    co_sdo_t sdo = {SDO_REQ_WRITE_4BYTE, idx, sidx, data};
+    return co_transmite_sdo(co, node_id, &sdo, 8);
 }
 #endif // SDO_H
