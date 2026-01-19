@@ -64,7 +64,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-device_data_t device_data = {.error_register = 0,
+device_data_t device_data = {.error_register = 123,
                              .node_id = 1,
                              .heartbeat_time = 1000,
                              .device_name = "MY_CANOPEN_DEVICE",
@@ -121,62 +121,48 @@ co_obj_t canopen_server;
 #define NODE_ID_PLATE2 2
 #define NODE_ID_PLATE3 3
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    // TODO нужно спрятать под капот определение инстанса
-    co_msg_t msg;
-    canopen_get_msg_from_handler(&msg, CAN_RX_FIFO0);
-    switch (canopen_get_node_id(&msg)) {
-    case NODE_ID_PLATE1:
-        canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
-        break;
-    case NODE_ID_PLATE2:
-        canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
-        break;
-    default:
-        break;
+#define NODE_ID2 2
+
+
+void CAN_SendTestMessage(void)
+{
+    CAN_TxHeaderTypeDef txHeader;
+    uint8_t txData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+    uint32_t txMailbox;
+    
+    txHeader.StdId = 0x123;       // Идентификатор сообщения
+    txHeader.ExtId = 0;
+    txHeader.IDE = CAN_ID_STD;    // Стандартный идентификатор
+    txHeader.RTR = CAN_RTR_DATA;  // Data frame
+    txHeader.DLC = 8;             // Длина данных
+    txHeader.TransmitGlobalTime = DISABLE;
+    
+    if (HAL_CAN_AddTxMessage(&hcan, &txHeader, txData, &txMailbox) != HAL_OK) {
+        Error_Handler();
+    }
+}
+
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
+{
+    CAN_RxHeaderTypeDef rxHeader;
+    uint8_t rxData[8];
+    
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK) {
+
     }
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    uint8_t node_id;
+
     co_msg_t msg = {0};
     canopen_get_msg_from_handler(&msg, CAN_RX_FIFO1);
-    node_id = canopen_get_node_id(&msg);
-    switch (node_id) {
-    case NODE_ID_PLATE1:
-        canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
-
-        break;
-    case NODE_ID_PLATE2:
-        canopen_send_msg_to_fifo_rx(&canopen_client, &msg);
-        break;
-    default:
-        break;
-    }
+    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
 }
 
 void canopen_sdo_callback(co_obj_t *canopen, co_msg_t *msg) {}
 
-co_msg_t sdo_client;
-co_msg_t sdo_server;
-co_msg_t pdo0;
-co_msg_t pdo1 = {0};
-
-uint32_t pdo0_id = 0x00000100;
-uint32_t pdo1_id = 0x00000200;
-
-void pdo1_callback(co_msg_t *msg) {
-    // uint16_t lol = 0;
-}
-
+void pdo1_callback(co_msg_t *msg) {}
 void sdo_callback(co_msg_t *msg) {}
-
-void pdo22_send() {
-    // pdo1.frame.pdo.data[0] = 10;
-    // pdo2.frame.pdo.data[1] = 11;
-    // co_pdo_send(&canopen, &pdo1);
-    // co_pdo_send(&canopen, &pdo2);
-}
 
 // CAN_TxHeaderTypeDef txHeader;
 /* USER CODE END 0 */
@@ -213,51 +199,21 @@ int main(void) {
     MX_CAN_Init();
     MX_TIM1_Init();
     /* USER CODE BEGIN 2 */
-    /*CANopen CLIENT
-     * ========================================================================*/
-    co_init(&canopen_client, CANOPEN_CLIENT, NODE_ID_PLATE2, COB_ID_STD);
-    co_config_node_id(&canopen_client, NODE_ID_PLATE1);
+    
+    /** CANopen Server example------------------------------------ */
+    co_init(&canopen_server, CANOPEN_SERVER, NODE_ID2, COB_ID_STD);
+    co_config_node_id(&canopen_server, 0);
 
-    /* Конфигурация PDO сообщений */
-    // co_pdo1_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
-    // co_pdo2_cfg_rx(&canopen_client, NODE_ID_PLATE1, &pdo1_callback);
-
-    /* Конфигурация SDO сообщений */
-    // co_sdo_cfg(&canopen_client, &sdo_client, NODE_ID_PLATE1, &sdo_callback);
-    /*=======================================================================================*/
-
-    /*CANopen SERVER
-     * ========================================================================*/
-    co_init(&canopen_server, CANOPEN_SERVER, NODE_ID_PLATE1, COB_ID_STD);
-    co_config_node_id(&canopen_server, NODE_ID_PLATE1);
-    co_config_node_id(&canopen_server, NODE_ID_PLATE2);
-    co_config_node_id(&canopen_server, NODE_ID_PLATE3);
-
-    /* Конфигурация PDO сообщений */
-    // co_pdo1_cfg_tx(&canopen_server, &pdo0, NODE_ID_PLATE2, 8);
-    // co_pdo2_cfg_tx(&canopen_server, &pdo1, NODE_ID_PLATE2, 8);
-
-    /* Конфигурация SDO сообщений */
-    // co_sdo_cfg(&canopen_server, &sdo_server, NODE_ID_PLATE2, &sdo_callback);
-    /*=======================================================================================*/
-
-    HAL_TIM_Base_Start_IT(&htim1);
+    co_subscribe_sdo(&canopen_server, 2, sdo_callback);
+    co_subscribe_sdo1(&canopen_server, 2, sdo_callback);
     /* USER CODE END 2 */
 
     /* Infinite loop */
     /* USER CODE BEGIN WHILE */
     while (1) {
-        // co_pdo_data_t pdo_data = {0};
-        // pdo_data.word1 = 12345;
-
-        // canopen_sdo_read_8(&canopen_client, &sdo_client, 0x1010, 0);
-
         co_process_msg_rx(&canopen_server);
         co_process_msg_tx(&canopen_server);
-
-        co_process_msg_rx(&canopen_client);
-        co_process_msg_tx(&canopen_client);
-        HAL_Delay(500);
+        HAL_Delay(1);
         /* USER CODE END WHILE */
 
         /* USER CODE BEGIN 3 */

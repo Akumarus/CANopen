@@ -77,11 +77,11 @@ co_res_t co_process_msg_rx(co_obj_t *co) {
         co_node_t *node = co_get_node_obj(co, msg.id);
         switch (msg.type) {
         case TYPE_SDO_TX:
-            co_server_process_sdo(co, &msg);
+            co_client_process_sdo(co, &msg);
             node->sdo.time = current_time;
             break;
         case TYPE_SDO_RX:
-            co_client_process_sdo(co, &msg);
+            co_server_process_sdo(co, &msg);
             node->sdo.time = current_time;
             break;
         case TYPE_PDO1_TX:

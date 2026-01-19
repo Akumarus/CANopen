@@ -36,6 +36,27 @@
                 "enabled": true,
                 "samplesPerSecond": 2
             }
+        },
+        {
+            "name": "OpenOCD debug stm32f103",
+            "cwd": "${workspaceFolder}",
+            "type": "cortex-debug",
+            "executable": "${workspaceFolder}/examples/stm32f103/build/Debug/can_f103.elf",
+            "request": "launch",
+            "servertype": "openocd",
+            "interface": "swd",
+            "serialNumber": "",
+            "runToEntryPoint": "main",
+            "svdFile": "STM32F103.svd",
+            "device": "STM32F103CB",
+            "liveWatch": {
+                "enabled": true,
+                "samplesPerSecond": 1
+            },
+            "configFiles": [
+                "interface/stlink-v2.cfg",
+                "target/stm32f1x.cfg"
+            ]
         }
     ]
 }
