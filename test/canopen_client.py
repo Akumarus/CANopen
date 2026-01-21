@@ -1,23 +1,70 @@
 import canopen
 import logging
 import time
+import enum
 
 logging.basicConfig(level=logging.DEBUG)
 
-class CanopenClient:
+class NodeState(enum.Enum):
+    BOOT_UP = 0x00
+    STOPPED = 0x04
+    OPERATIONAL = 0x05
+    PRE_OPERATIONAL = 0x7F
 
-    def __init__(self, server_id=2):
+class NMTCommand(enum.Enum):
+    START = 0x01
+    STOP = 0x02
+    PRE_OPERAT = 0x80
+    RESET_NODE = 0x81
+    RESET_COMM = 0x82
+
+class CanopenClient:
+    def __init__(self, server_id=2, bustype='slcan', channel='COM7', bitrate='500000'):
         self.server_id = server_id
-        self.network = canopen.Network()
-        logging.basicConfig(level=logging.INFO)
+        self.bustype = bustype
+        self.channel = channel
+        self.bitrate = bitrate
+        self.network = None
+        self.server_node = None
+        self.is_connected = None
+
+        self.standard_objects = {
+            0x1000: "Device Type",
+            0x1001: "Error Regiser",
+            0x1008: "Manufacturer Device Name",
+            0x1009: "Manufacturer Hardware Version",
+            0x100A: "Manufacturer Software Version",
+            0x1018: "Identity Object",
+            0x1F80: "NMT Startup",
+        }
 
     def start(self):
-        print("CANopen client connecting...")
-        self.network.connect(bustype='slcan', channel='COM7', bitrate=500000)
-        self.server_node = self.network.add_node(self.server_id, None)
-        print(f"CANopen client connected. Server waiting {self.server_id}...")
-        # self.server_node.object_dictionary.add_object(0x2000, 'VAR', 0x0007)
-        # self.server_node.object_dictionary[0x2000].add_member('Device type', 'VAR', 0x0007,0x00000000)
+        try:
+            print(f"Connecting to CAN bus: {self.channel}, {self.bitrate} bps")
+            # Connect to CAN bus
+            self.network = canopen.Network()
+            self.network.connect(
+                bustype=self.bustype, 
+                channel=self.channel, 
+                bitrate=self.bitrate)
+            # Add server node 
+            self.server_node = self.network.add_node(self.server_id, None)
+            self.is_connected = True
+            print(f"Connected to CAN bus. Server node ID: {self.server_id}")
+            # Monitoring CAN bus in background mode
+            self.network.scanner.search()
+            return self.is_connected
+        
+        except Exception as e:
+            print(f"Connection failed: {e}")
+            self.is_connected = False
+            return self.is_connected
+
+    def stop(self):
+        if self.network:
+            self.network.disconnect()
+            self.is_connected = False
+            print("Disconnected form CAN bus")
 
     def test_nmt(self):
         print("Testing NMT protocol (Clinet --> Server)")
@@ -64,24 +111,10 @@ class CanopenClient:
         except: 
             print("ERROR: Object 0x2000 not found on server!")
 
-    def listen_can_bus(self):
-
-        """Просто слушать CAN шину"""
-        print("Listening to CAN bus for 5 seconds...")
-        start = time.time()
-
-        while time.time() - start < 5:
-            try:
-                msg = self.network.bus.recv(timeout=0.1)
-                if msg:
-                    print(f"ID: 0x{msg.arbitration_id:03X} | Data: {msg.data.hex()}")
-            except Exception as e:
-                print(f"Receive error: {e}")
-
 if __name__ == "__main__":
-    client = CanopenClient(server_id=2)
+    client = CanopenClient()
     client.start()
     # client.listen_can_bus()
-    while True:
-        client.test_sdo()
-        time.sleep(1)
+    # while True:
+    #     client.test_sdo()
+    #     time.sleep(1)
