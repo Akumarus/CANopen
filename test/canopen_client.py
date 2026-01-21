@@ -1,5 +1,6 @@
 import canopen
 import logging
+import struct
 import time
 import enum
 
@@ -54,7 +55,6 @@ class CanopenClient:
             # Monitoring CAN bus in background mode
             self.network.scanner.search()
             return self.is_connected
-        
         except Exception as e:
             print(f"Connection failed: {e}")
             self.is_connected = False
@@ -67,33 +67,75 @@ class CanopenClient:
             print("Disconnected form CAN bus")
 
     def test_nmt(self):
-        print("Testing NMT protocol (Clinet --> Server)")
-        states = {
-            0x00: "BOOTUP",
-            0x04: "STOPPED",
-            0x05: "OPERATIONAL",
-            0x7F: "PRE-OPERATIONAL"
-        }
+        print("Testing NMT")
+        commands = [
+            (NMTCommand.STOP, "STOP"),
+            (NMTCommand.START, "START"),
+            (NMTCommand.PRE_OPERAT, "PRE-OPERATIONAL"),
+            (NMTCommand.RESET_COMM, "RESET COMMUNICATION")
+        ]
 
-        print("Starting server in Operation mode")
-        self.network.send_message(0x000, [0x01, self.server_id])
-        print(f"Clint --> Server {self.server_id}: START")
-        time.sleep(2)
+        for cmd, description in commands:
+            print(f"\nSending {description}...")
+            self.send_nmt_cmd(cmd)
+            time.sleep(1)
 
-        print("Monitoring Heartbeat:")
-        hb_received = False
+            # TODO Need check heartbeat
+
+    def send_nmt_cmd(self, cmd):
+        if not self.is_connected:
+            print("Not connected!")
+            return self.is_connected
+        try:
+            client_id = 0x0000
+            self.network.send_message(client_id,[cmd.value, self.server_id])
+            print(f"Sent NMT command: {cmd.name} (0x{cmd.value:x02x})")
+            return self.is_connected
+        except Exception as e:
+            print(f"Failed to send NMT command: {e}")
+            return self.is_connected
+
+    def test_tpdo(self):
+        print("Testing TPDO")
+        tpdo1_id = 0x180 + self.server_id
+        print(f"\nSubscribing to TPDO1 (COB-ID: 0x{tpdo1_id:03X})")
+        pdo_received = False
         start_time = time.time()
-        while time.time() - start_time < 3:
-            msg = self.network.bus.recv(timeout=0.1)
-            if msg and msg.arbitration_id == 0x700 + self.server_id:
-                state = states.get(msg.data[0], f"UNKNOWN({msg.data[0]:02X})")
-                print(f"Server --> Client: Heartbeat = {state}")
-                hb_received = True
-                break
-        
-        # if not hb_received:
-        #     print("Heartbeat is not received")
 
+        while time.time() - start_time < 5:
+            try:
+                msg = self.network.bus.recv(timeout=0.1)
+                if msg and msg.arbitration_id == tpdo1_id:
+                    print(f"PDO received! Data: {msg.data.hex()}")
+                    pdo_received = True
+
+                    if len(msg.data) >= 6:
+                        value1 = struct.unpack('<I', msg.data[0:4])[0]
+                        value2 = struct.unpack('<H', msg.data[4:6])[0]
+                        print(f"Parsed: Value1=0x{value1:08X}, Value2= 0x{value2:0x04}")
+            except Exception as e:
+                print(f"Error: {e}")
+        
+        if not pdo_received:
+            print("No PDO received within timeout")
+
+        return pdo_received
+    
+    def test_rpdo(self):
+        print("Testing RPDO")
+        rpdo1_id = 0x200 + self.server_id
+        print(f"\nSending test RPDO to COB-ID 0x{rpdo1_id:03X}...")
+        data = bytes([0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88])
+        try:
+            self.network.send_message(rpdo1_id, data)
+            print(f"Send RPDO with data: {data.hex()}")
+            return True
+        except Exception as e:
+            print(f"Fail to send RPDO: {e}")
+            return False
+
+    def test_sdo_read(self):
+        print("Testing SDO read")
     def test_sdo(self):
         # self.network.send_message(0x000, [0x01, self.server_id])
         print("Testing SDO protocol (Clinet --> Server)")
