@@ -75,6 +75,7 @@ typedef enum {
     CANOPEN_ERROR,
 } co_res_t;
 
+#pragma pack(push, 1)
 typedef struct
 {
     union
@@ -109,8 +110,6 @@ typedef struct
     };
 } co_pdo_t;
 
-static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
-
 typedef struct
 {
     uint8_t cmd;   // 1 байт
@@ -125,7 +124,6 @@ typedef struct
     uint8_t node_id;
 } co_nmt_t;
 
-#pragma pack(push, 1)
 typedef union
 {
     uint8_t row[COB_SIZE_PDO];
@@ -172,5 +170,7 @@ typedef struct
     cob_frame_t frame;
     // co_node_t *node;
 } co_msg_t;
+
+static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
 #endif // DEF_H

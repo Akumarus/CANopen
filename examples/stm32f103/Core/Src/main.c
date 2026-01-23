@@ -64,7 +64,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-device_data_t device_data = {.error_register = 123,
+device_data_t device_data = {.error_register = 0xFFFF,
                              .node_id = 1,
                              .heartbeat_time = 1000,
                              .device_name = "MY_CANOPEN_DEVICE",
@@ -149,7 +149,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-
     co_msg_t msg = {0};
     canopen_get_msg_from_handler(&msg, CAN_RX_FIFO1);
     canopen_send_msg_to_fifo_rx(&canopen_server, &msg);

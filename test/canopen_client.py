@@ -149,9 +149,9 @@ class CanopenClient:
         try:  
             # test_val = self.server_node.sdo[0x2000][0].raw
             device_type = self.server_node.sdo.upload(0x1000, 0)
-            # print(f"Test variable 0x2000: {test_val} (0x{test_val:04X})")
+            print(f"Test variable 0x1000: {device_type}")
         except: 
-            print("ERROR: Object 0x2000 not found on server!")
+            print("ERROR: Object 0x1000 not found on server!")
 
 
 if __name__ == "__main__":

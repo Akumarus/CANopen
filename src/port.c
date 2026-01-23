@@ -4,8 +4,7 @@
 uint32_t mailbox = 0;
 uint32_t it_mask = CAN_IT_RX_FIFO0_MSG_PENDING | CAN_IT_RX_FIFO1_MSG_PENDING;
 
-void port_can_init(void)
-{
+void port_can_init(void) {
     MX_CAN_Init();
     /*
       TODO Почему-то на другой плате не сразу меняется регистр выхода
@@ -17,8 +16,7 @@ void port_can_init(void)
     HAL_CAN_ActivateNotification(&hcan, it_mask);
 }
 
-void port_can_init_filter(co_filter_t *filter)
-{
+void port_can_init_filter(co_filter_t *filter) {
     CAN_FilterTypeDef can_filter = {0};
     can_filter.FilterBank = filter->bank;
     can_filter.FilterMode = filter->mode;
@@ -32,9 +30,8 @@ void port_can_init_filter(co_filter_t *filter)
     can_filter.SlaveStartFilterBank = filter->end_bank;
     HAL_CAN_ConfigFilter(&hcan, &can_filter);
 }
-
-void port_can_send(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uint8_t *data)
-{
+#include "string.h"
+void port_can_send(uint32_t id, uint32_t rtr, uint32_t ide, uint32_t dlс, uint8_t *data) {
     CAN_TxHeaderTypeDef txHeader = {0};
     txHeader.StdId = id;
     txHeader.RTR = rtr;
@@ -48,8 +45,7 @@ uint32_t port_get_free_mailboxes(void) { return HAL_CAN_GetTxMailboxesFreeLevel(
 
 uint32_t port_get_timestamp(void) { return HAL_GetTick(); }
 
-bool port_can_receive_message(uint32_t *id, uint8_t *data, uint8_t *dlc, uint32_t fifo)
-{
+bool port_can_receive_message(uint32_t *id, uint8_t *data, uint8_t *dlc, uint32_t fifo) {
     if (id == NULL || data == NULL || dlc == NULL)
         return false;
 
