@@ -144,9 +144,8 @@ static void co_check_timeout(co_timeout_t *cob, uint32_t time) {
     cob->online = (elapsed > cob->timeout) ? true : false;
 }
 
-co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback) {
+co_res_t co_config_callback(co_obj_t *canopen, uint32_t id, co_hdl_t callback) {
     assert(canopen != NULL);
-    assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
     assert(callback != NULL);
     assert(canopen->info.callbacks_count < MAX_CALLBACKS);
 
@@ -156,9 +155,6 @@ co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, c
     canopen->callbacks[canopen->info.callbacks_count].id = id;
     canopen->callbacks[canopen->info.callbacks_count].callback = callback;
     canopen->info.callbacks_count++;
-
-    if (co_cnf_filter_list_16b(canopen->banks, id, fifo) != CANOPEN_OK)
-        return CANOPEN_ERROR;
 
     return CANOPEN_OK;
 }

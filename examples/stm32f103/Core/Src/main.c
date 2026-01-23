@@ -123,32 +123,28 @@ co_obj_t canopen_server;
 
 #define NODE_ID2 2
 
-
-void CAN_SendTestMessage(void)
-{
+void CAN_SendTestMessage(void) {
     CAN_TxHeaderTypeDef txHeader;
     uint8_t txData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
     uint32_t txMailbox;
-    
-    txHeader.StdId = 0x123;       // Идентификатор сообщения
+
+    txHeader.StdId = 0x123; // Идентификатор сообщения
     txHeader.ExtId = 0;
-    txHeader.IDE = CAN_ID_STD;    // Стандартный идентификатор
-    txHeader.RTR = CAN_RTR_DATA;  // Data frame
-    txHeader.DLC = 8;             // Длина данных
+    txHeader.IDE = CAN_ID_STD;   // Стандартный идентификатор
+    txHeader.RTR = CAN_RTR_DATA; // Data frame
+    txHeader.DLC = 8;            // Длина данных
     txHeader.TransmitGlobalTime = DISABLE;
-    
+
     if (HAL_CAN_AddTxMessage(&hcan, &txHeader, txData, &txMailbox) != HAL_OK) {
         Error_Handler();
     }
 }
 
-void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
-{
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     CAN_RxHeaderTypeDef rxHeader;
     uint8_t rxData[8];
-    
-    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK) {
 
+    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK) {
     }
 }
 
@@ -199,13 +195,12 @@ int main(void) {
     MX_CAN_Init();
     MX_TIM1_Init();
     /* USER CODE BEGIN 2 */
-    
+
     /** CANopen Server example------------------------------------ */
     co_init(&canopen_server, CANOPEN_SERVER, NODE_ID2, COB_ID_STD);
     co_config_node_id(&canopen_server, 0);
 
     co_subscribe_sdo(&canopen_server, 2, sdo_callback);
-    co_subscribe_sdo1(&canopen_server, 2, sdo_callback);
     /* USER CODE END 2 */
 
     /* Infinite loop */

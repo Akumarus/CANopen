@@ -24,9 +24,11 @@ typedef enum {
     COB_RTR_REMOTE = 0x00000002U /*!< Remote frame */
 } Identifier_Type;
 
-typedef union {
+typedef union
+{
     uint16_t all;
-    struct {
+    struct
+    {
         uint16_t inited : 1;
         uint16_t filter_banks_full : 1;
         uint16_t callbacks_full : 1;
@@ -38,7 +40,8 @@ typedef union {
     } bit;
 } co_status_t;
 
-typedef struct {
+typedef struct
+{
     uint32_t id;
     co_hdl_t callback;
 } canopen_handler_t;
@@ -48,7 +51,8 @@ typedef enum {
     CANOPEN_CLIENT,
 } co_role_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t bank_count;
     uint8_t callbacks_count;
     uint32_t tx_mailbox;
@@ -68,7 +72,8 @@ typedef struct {
     uint32_t tx_busy_mailbox_count;
 } co_info_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t node_id;
     uint32_t timestamp;
     uint32_t ide;
@@ -94,7 +99,7 @@ co_res_t co_process_msg_tx(co_obj_t *co);
 co_res_t co_process_msg_rx(co_obj_t *co);
 co_res_t co_process_timeout(co_obj_t *co);
 
-co_res_t canopen_config_callback(co_obj_t *canopen, uint32_t id, uint8_t fifo, co_hdl_t callback);
+co_res_t co_config_callback(co_obj_t *canopen, uint32_t id, co_hdl_t callback);
 co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo);
 co_res_t canopen_send_msg_to_fifo_rx(co_obj_t *canopen, co_msg_t *msg);
 co_node_t *co_get_node_obj(co_obj_t *canopen, uint8_t node_id);

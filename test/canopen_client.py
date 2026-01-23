@@ -153,10 +153,11 @@ class CanopenClient:
         except: 
             print("ERROR: Object 0x2000 not found on server!")
 
+
 if __name__ == "__main__":
-    client = CanopenClient()
+    client = CanopenClient(channel="/dev/ttyACM1")
     client.start()
-    # client.listen_can_bus()
-    # while True:
-    #     client.test_sdo()
-    #     time.sleep(1)
+    while True:
+        client.test_sdo()
+        time.sleep(1)
+    client.stop()

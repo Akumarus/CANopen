@@ -16,7 +16,8 @@ co_res_t co_subscribe_pdo(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_h
 
     uint32_t id = (co->role == CANOPEN_SERVER) ? PDO_RX_BASE(pdo_num) : PDO_TX_BASE(pdo_num);
     id += node_id;
-    return canopen_config_callback(co, id, 0, callback);
+    // co_cnf_filter_list_16b();
+    return co_config_callback(co, id, callback);
 }
 
 co_res_t co_transmite_pdo(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_pdo_t *data,

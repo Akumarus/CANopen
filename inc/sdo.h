@@ -90,7 +90,6 @@ typedef enum {
 } co_abort_code_t;
 
 co_res_t co_subscribe_sdo(co_obj_t *co, uint8_t node_id, co_hdl_t callback);
-co_res_t co_subscribe_sdo1(co_obj_t *co, uint8_t node_id, co_hdl_t callback);
 co_res_t co_transmite_sdo(co_obj_t *co, uint8_t node_id, co_sdo_t *data, uint8_t dlc);
 co_res_t co_server_process_sdo(co_obj_t *co, co_msg_t *msg);
 co_res_t co_client_process_sdo(co_obj_t *co, co_msg_t *msg);

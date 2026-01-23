@@ -3,8 +3,7 @@
 
 static uint8_t co_find_free_bank(co_bank_t *bank, uint16_t id, uint8_t fifo);
 
-co_res_t co_cnf_filter_list_16b(co_bank_t *bank, uint32_t id, uint8_t fifo)
-{
+co_res_t co_config_filter(co_bank_t *bank, uint32_t id, uint8_t fifo) {
     assert(bank != NULL);
     assert((fifo == 0) || (fifo == 1));
 
@@ -42,8 +41,7 @@ co_res_t co_cnf_filter_list_16b(co_bank_t *bank, uint32_t id, uint8_t fifo)
 // //   can_conf_filter(&filter);
 // // }
 
-static uint8_t co_find_free_bank(co_bank_t *bank, uint16_t id, uint8_t fifo)
-{
+static uint8_t co_find_free_bank(co_bank_t *bank, uint16_t id, uint8_t fifo) {
     uint8_t bank_num = 0xFF;
     for (uint8_t i = 0; i < MAX_BANK_COUNT; i++) {
         if ((bank[i].fifo == fifo && bank[i].used < IDS_PER_BANK) || bank[i].used == 0) {

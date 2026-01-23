@@ -15,21 +15,16 @@ co_res_t co_subscribe_sdo(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
     assert(node_id > 0 && node_id < 127);
     assert(callback != NULL);
 
-    uint32_t id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_RX : COB_ID_SDO_TX;
-    id += co->node_id;
+    uint32_t rsdo_id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_RX : COB_ID_SDO_TX;
+    uint32_t tsdo_id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_TX : COB_ID_SDO_RX;
+    rsdo_id += co->node_id;
+    tsdo_id += co->node_id;
 
-    return canopen_config_callback(co, id, 1, callback);
-}
+    co_config_filter(co->banks, rsdo_id, 1);
+    co_config_filter(co->banks, tsdo_id, 1);
+    co_config_callback(co, rsdo_id, callback);
 
-co_res_t co_subscribe_sdo1(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
-    assert(co != NULL);
-    assert(node_id > 0 && node_id < 127);
-    assert(callback != NULL);
-
-    uint32_t id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_TX : COB_ID_SDO_RX;
-    id += co->node_id;
-
-    return canopen_config_callback(co, id, 1, callback);
+    return CANOPEN_OK;
 }
 
 co_res_t co_transmite_sdo(co_obj_t *co, uint8_t node_id, co_sdo_t *data, uint8_t dlc) {
