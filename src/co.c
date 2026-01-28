@@ -73,7 +73,8 @@ co_res_t co_process_msg_rx(co_obj_t *co) {
 
         uint32_t current_time = port_get_timestamp();
         co_node_t *node = co_get_node_obj(co, msg.id);
-        switch (msg.type) {
+        uint32_t base_id = msg.id & 0x780;
+        switch (base_id) {
         case TYPE_SDO_TX:
             co_client_process_sdo(co, &msg);
             node->sdo.time = current_time;
@@ -172,7 +173,6 @@ co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo) {
     assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
 
     port_can_receive_message(&msg->id, msg->frame.row, &msg->dlc, fifo);
-    msg->type = msg->id & 0x780;
     return CANOPEN_OK;
 }
 

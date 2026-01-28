@@ -10,50 +10,27 @@ static co_res_t co_process_download_sdo(co_obj_t *co, co_msg_t *msg);
 #define SDO_GET_SIZE_FROM_CMD(msg) 4 - ((msg->frame.sdo.cmd & SDO_SIZE_N_MASK) >> 2)
 #define SDO_SET_SERVER_ID(msg) ((msg)->id = ((msg)->id - COB_ID_SDO_TX) + COB_ID_SDO_RX)
 
-co_res_t co_subscribe_sdo(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
-    assert(co != NULL);
-    assert(node_id > 0 && node_id < 127);
-    assert(callback != NULL);
+// #define RPDO1(node_id) (0x200 + ((node_id) & 0x7F))
 
-    uint32_t rsdo_id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_RX : COB_ID_SDO_TX;
-    uint32_t tsdo_id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_TX : COB_ID_SDO_RX;
-    rsdo_id += co->node_id;
-    tsdo_id += co->node_id;
-
-    co_config_filter(co->banks, rsdo_id, 1);
-    co_config_filter(co->banks, tsdo_id, 1);
-    co_config_callback(co, rsdo_id, callback);
-
+co_res_t co_subscribe_sdo(co_obj_t *co, uint32_t id, co_hdl_t callback) {
+    co_config_filter(co->banks, COB_ID_SDO_RX + (id & 0x7F), 1);
+    co_config_filter(co->banks, COB_ID_SDO_TX + (id & 0x7F), 1);
+    co_config_callback(co, id, callback);
     return CANOPEN_OK;
 }
 
-co_res_t co_transmite_sdo(co_obj_t *co, uint8_t node_id, co_sdo_t *data, uint8_t dlc) {
-    assert(co != NULL);
-    assert(node_id > 0 && node_id < 127);
-    assert(data != NULL);
-
-    co_msg_t msg = {0};
-    msg.dlc = dlc;
-    msg.type = (co->role == CANOPEN_CLIENT) ? TYPE_SDO_TX : TYPE_SDO_RX;
-    msg.id = (co->role == CANOPEN_CLIENT) ? COB_ID_SDO_TX : COB_ID_SDO_RX;
-    msg.id += node_id;
+co_res_t co_transmite_sdo(co_obj_t *co, uint32_t id, co_sdo_t *data, uint8_t dlc) {
+    co_msg_t msg = { .dlc = dlc, .id = id};
     memcpy(&msg.frame, data, dlc);
-
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_FULL) ? CANOPEN_ERROR : CANOPEN_OK;
 }
 
 co_res_t co_client_process_sdo(co_obj_t *co, co_msg_t *msg) {
-    assert(co != NULL);
-    assert(msg != NULL);
-
     return CANOPEN_OK;
 }
 
 co_res_t co_server_process_sdo(co_obj_t *co, co_msg_t *msg) {
-    assert(co != NULL);
-    assert(msg != NULL);
-
     switch (msg->frame.sdo.cmd) {
     case SDO_REQ_UPLOAD:
         co_process_upload_sdo(co, msg);
@@ -76,20 +53,17 @@ co_res_t co_server_process_sdo(co_obj_t *co, co_msg_t *msg) {
 }
 
 static co_res_t co_process_upload_sdo(co_obj_t *co, co_msg_t *msg) {
-    assert(co != NULL);
-    assert(msg != NULL);
-
     uint16_t idx = msg->frame.sdo.idx = (msg->frame.row[2] << 8 | msg->frame.row[1]);
     uint16_t size = co_od_size(idx, msg->frame.sdo.sidx);
     if (size == 0) {
-        uint8_t id = (msg->id - COB_ID_SDO_TX) + COB_ID_SDO_RX;
-        co_abort_sdo(co, id, idx, msg->frame.sdo.sidx, SDO_ABORT_OBJ_NOT_EXIST);
+        // uint8_t id = (msg->id - COB_ID_SDO_TX) + COB_ID_SDO_RX;
+        // co_abort_sdo(co, id, idx, msg->frame.sdo.sidx, SDO_ABORT_OBJ_NOT_EXIST);
         return CANOPEN_ERROR;
     } else if (size <= 4) {
         co_od_read(idx, msg->frame.sdo.sidx, &msg->frame.sdo.data, sizeof(uint32_t));
         SDO_SET_SERVER_ID(msg);
         msg->frame.sdo.cmd = 0x43;
-        co_transmite_sdo(co, 2, &msg->frame.sdo, 8);
+        co_transmite_sdo(co, msg->id, &msg->frame.sdo, 8);
     }
     return CANOPEN_OK;
 }

@@ -14,11 +14,8 @@ co_res_t co_subscribe_pdo(co_obj_t *co, uint32_t id, co_hdl_t callback) {
 }
 
 co_res_t co_transmite_pdo(co_obj_t *co, uint32_t id, co_pdo_t *data, uint8_t dlc) {
-    co_msg_t msg = {0};
-    // msg.type = (co->role == CANOPEN_SERVER) ? PDO_TX_TYPE(pdo_num) : PDO_RX_TYPE(pdo_num);
-    msg.id = id;
-    msg.dlc = dlc;
-    memcpy(&msg.frame.pdo, data, msg.dlc);
+    co_msg_t msg = { .dlc = dlc, .id = id};
+    memcpy(&msg.frame, data, dlc);
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }

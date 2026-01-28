@@ -166,7 +166,6 @@ typedef struct
 {
     uint32_t id;
     uint8_t dlc;
-    co_msg_type_t type;
     cob_frame_t frame;
     // co_node_t *node;
 } co_msg_t;

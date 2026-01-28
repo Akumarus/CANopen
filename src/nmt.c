@@ -54,7 +54,6 @@ co_res_t co_nmt_send_bootup(co_obj_t *co) {
     co_msg_t msg = {0};
     msg.id = COB_ID_HEARTBEAT + co->node_id;
     msg.dlc = 1;
-    msg.type = TYPE_NMT;
     msg.frame.nmt.cmd = BOOTUP_CMD; // TODO чему должно быть равно
     co->nmt_state = NMT_STATE_PRE_OPERATIONAL;
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
@@ -83,7 +82,6 @@ co_res_t co_nmt_send_cmd(co_obj_t *co, uint8_t node_id, co_nmt_cmd_t cmd) {
     co_msg_t msg = {0};
     msg.id = COB_ID_NMT;
     msg.dlc = 2;
-    msg.type = TYPE_NMT;
     msg.frame.nmt.cmd = cmd;
     msg.frame.nmt.node_id = node_id;
 

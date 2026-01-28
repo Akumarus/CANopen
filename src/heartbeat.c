@@ -47,7 +47,6 @@ static co_res_t co_transmite_heartbeat(co_obj_t *co) {
     co_msg_t msg = {0};
     msg.id = COB_ID_HEARTBEAT + co->node_id;
     msg.dlc = 1;
-    msg.type = TYPE_HEARTBEAT;
     msg.frame.nmt.cmd = co->nmt_state;
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
