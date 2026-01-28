@@ -70,9 +70,6 @@ static co_res_t co_process_upload_sdo(co_obj_t *co, co_msg_t *msg) {
 }
 
 static co_res_t co_process_download_sdo(co_obj_t *co, co_msg_t *msg) {
-    assert(co != NULL);
-    assert(msg != NULL);
-
     uint8_t data_size = SDO_GET_SIZE_FROM_CMD(msg);
     // co_od_write(msg->data.idx, msg->frame.sdo.sidx, &msg->data, data_size);
     SDO_SET_SERVER_ID(msg);
