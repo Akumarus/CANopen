@@ -42,6 +42,6 @@
 #define TPDO4(node_id) (0x480 + ((node_id) & 0x7F))
 
 co_res_t co_subscribe_pdo(co_obj_t *co, uint32_t id, co_hdl_t callback);
-co_res_t co_transmite_pdo(co_obj_t *co, uint32_t id, co_pdo_t *data, uint8_t dlc);
+co_res_t co_transmite_pdo(co_obj_t *co, uint32_t id, uint8_t *data, uint8_t dlc);
 
 #endif // PDO_H

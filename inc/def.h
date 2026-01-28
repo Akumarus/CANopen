@@ -18,40 +18,24 @@
 #define CANOPEN_TIMEOUT 1000
 
 typedef enum {
-    COB_ID_NMT = 0x000,
-    COB_ID_SYNC_MESSAGE = 0x080,
-    COB_ID_EMERGENCY_START = 0x080,
-    COB_ID_TIME_MESSAGE = 0x100,
-    COB_ID_PDO1 = 0x180,
-    COB_ID_PDO2 = 0x280,
-    COB_ID_PDO3 = 0x380,
-    COB_ID_PDO4 = 0x480,
-    COB_ID_SDO_RX = 0x580,
-    COB_ID_SDO_TX = 0x600,
-    COB_ID_HEARTBEAT = 0x700,
-    COB_ID_LSS_TX = 0x7E4, // TODO Посмотреть, что это
-    COB_ID_LSS_RX = 0x7E5,
-} canopen_fc_t;
-
-typedef enum {
-    TYPE_NMT = 0x000,
-    TYPE_SYNC = 0x080,
-    TYPE_EMCY = 0x080,
-    TYPE_TIMESTAMP = 0x100,
-    TYPE_PDO1_TX = 0x180,
-    TYPE_PDO1_RX = 0x200,
-    TYPE_PDO2_TX = 0x280,
-    TYPE_PDO2_RX = 0x300,
-    TYPE_PDO3_TX = 0x380,
-    TYPE_PDO3_RX = 0x400,
-    TYPE_PDO4_TX = 0x480,
-    TYPE_PDO4_RX = 0x500,
-    TYPE_SDO_TX = 0x580,
-    TYPE_SDO_RX = 0x600,
-    TYPE_HEARTBEAT = 0x700,
-    TYPE_RTR = 0x000,
-    TYPE_LSS_TX = 0x7E5,
-    TYPE_LSS_RX = 0x7E4,
+    ID_NMT = 0x000,
+    ID_SYNC = 0x080,
+    ID_EMCY = 0x080,
+    ID_TIMESTAMP = 0x100,
+    ID_TPDO1 = 0x180,
+    ID_RPDO1 = 0x200,
+    ID_TPDO2 = 0x280,
+    ID_RPDO2 = 0x300,
+    ID_TPDO3 = 0x380,
+    ID_RPDO3 = 0x400,
+    ID_TPDO4 = 0x480,
+    ID_RPDO4 = 0x500,
+    ID_TSDO = 0x580,
+    ID_RSDO = 0x600,
+    ID_HEARTBEAT = 0x700,
+    ID_RTR = 0x000,
+    ID_TLSS = 0x7E5,
+    ID_RLSS = 0x7E4,
 } co_msg_type_t;
 
 typedef enum {
@@ -74,64 +58,6 @@ typedef enum {
     CANOPEN_OK = 0,
     CANOPEN_ERROR,
 } co_res_t;
-
-#pragma pack(push, 1)
-typedef struct
-{
-    union
-    {
-        uint64_t u64;
-
-        struct
-        {
-            uint32_t low;
-            uint32_t high;
-        };
-
-        struct
-        {
-            uint16_t word0;
-            uint16_t word1;
-            uint16_t word2;
-            uint16_t word3;
-        };
-
-        struct
-        {
-            uint8_t byte0;
-            uint8_t byte1;
-            uint8_t byte2;
-            uint8_t byte3;
-            uint8_t byte4;
-            uint8_t byte5;
-            uint8_t byte6;
-            uint8_t byte7;
-        };
-    };
-} co_pdo_t;
-
-typedef struct
-{
-    uint8_t cmd;   // 1 байт
-    uint16_t idx;  // 2-3 байты
-    uint8_t sidx;  // 4 байт
-    uint32_t data; // 5-8 байты
-} co_sdo_t;
-
-typedef struct
-{
-    uint8_t cmd;
-    uint8_t node_id;
-} co_nmt_t;
-
-typedef union
-{
-    uint8_t row[COB_SIZE_PDO];
-    co_nmt_t nmt;
-    co_pdo_t pdo;
-    co_sdo_t sdo;
-} cob_frame_t;
-#pragma pack(pop)
 
 typedef union
 {
@@ -166,10 +92,7 @@ typedef struct
 {
     uint32_t id;
     uint8_t dlc;
-    cob_frame_t frame;
-    // co_node_t *node;
+    uint8_t data[COB_SIZE_DEF];
 } co_msg_t;
-
-static_assert(sizeof(co_pdo_t) == 8, "co_pdo_data_t must be exactly 8 bytes for CAN PDO!");
 
 #endif // DEF_H

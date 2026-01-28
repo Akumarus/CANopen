@@ -114,12 +114,7 @@ co_od_t object_dictionary[OBJECT_DICTIONARY_SIZE] = {
      {0},
      {.u32 = 0xFFFFFFFF}}};
 
-co_obj_t canopen_client;
 co_obj_t canopen_server;
-
-#define NODE_ID_PLATE1 1
-#define NODE_ID_PLATE2 2
-#define NODE_ID_PLATE3 3
 
 #define NODE 2
 
@@ -133,16 +128,26 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 void canopen_sdo_callback(co_obj_t *canopen, co_msg_t *msg) {}
 
-void pdo_callback(co_msg_t *msg) { 
-    uint8_t lol;
-    lol++;
-}
-void sdo_callback(co_msg_t *msg) {
+void rpdo_callback(co_msg_t *msg) { 
     uint8_t lol;
     lol++;
 }
 
-// CAN_TxHeaderTypeDef txHeader;
+void tpdo_callback(co_msg_t *msg) { 
+    uint8_t lol;
+    lol++;
+}
+
+void rsdo_callback(co_msg_t *msg) {
+    uint8_t lol;
+    lol++;
+}
+
+void send_pdo(void){
+    uint8_t data[] = {0x00, 0x00, 0x11, 0x11, 0x00, 0x00, 0x01, 0x23};
+    co_transmite_pdo(&canopen_server, TPDO1(NODE), data, sizeof(data));
+}
+
 /* USER CODE END 0 */
 
 /**
@@ -182,8 +187,10 @@ int main(void) {
     co_init(&canopen_server, CANOPEN_SERVER, NODE, COB_ID_STD);
     co_config_node_id(&canopen_server, NODE);
 
-    co_subscribe_pdo(&canopen_server, RPDO1(NODE), pdo_callback);
-    co_subscribe_sdo(&canopen_server, RSDO1(NODE), sdo_callback);
+    co_subscribe_pdo(&canopen_server, RPDO1(NODE), rpdo_callback);
+    co_subscribe_pdo(&canopen_server, TPDO1(NODE), tpdo_callback);
+    co_subscribe_sdo(&canopen_server, RSDO1(NODE), rsdo_callback);
+    HAL_TIM_Base_Start_IT(&htim1);
     /* USER CODE END 2 */
 
     /* Infinite loop */

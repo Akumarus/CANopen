@@ -7,13 +7,13 @@ co_res_t co_client_process_heartbeat(co_obj_t *co, co_msg_t *msg) {
     assert(msg != NULL);
     assert(co->role == CANOPEN_CLIENT);
 
-    uint8_t node_id = msg->id - COB_ID_HEARTBEAT;
+    uint8_t node_id = msg->id - ID_HEARTBEAT;
     co_node_t *node = co_get_node_obj(co, node_id);
     if (node == NULL) {
         // TODO Можно самим добавить узел сети
         return CANOPEN_ERROR;
     }
-    node->state = msg->frame.nmt.cmd;
+    // node->state = msg->frame.nmt.cmd;
     return CANOPEN_OK;
 }
 
@@ -45,9 +45,9 @@ static co_res_t co_transmite_heartbeat(co_obj_t *co) {
         return CANOPEN_OK;
 
     co_msg_t msg = {0};
-    msg.id = COB_ID_HEARTBEAT + co->node_id;
+    msg.id = ID_HEARTBEAT + co->node_id;
     msg.dlc = 1;
-    msg.frame.nmt.cmd = co->nmt_state;
+    // msg.frame.nmt.cmd = co->nmt_state;
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }

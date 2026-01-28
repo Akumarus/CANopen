@@ -112,7 +112,7 @@ class CanopenClient:
                     if len(msg.data) >= 6:
                         value1 = struct.unpack('<I', msg.data[0:4])[0]
                         value2 = struct.unpack('<H', msg.data[4:6])[0]
-                        print(f"Parsed: Value1=0x{value1:08X}, Value2= 0x{value2:0x04}")
+                        print(f"Parsed: Value1=0x{value1:04X}, Value2= 0x{value2:04X}")
             except Exception as e:
                 print(f"Error: {e}")
         
@@ -148,9 +148,9 @@ class CanopenClient:
         # print(f"Product Code: 0x{product_code}")
         try: 
             data = 123
-            test_val = self.server_node.sdo.download(0x1000, 0, data)
-            # device_type = self.server_node.sdo.upload(0x1000, 0)
-            # print(f"Test variable 0x1000: {device_type}")
+            # test_val = self.server_node.sdo.download(0x1000, 0, data)
+            device_type = self.server_node.sdo.upload(0x1000, 0)
+            print(f"Test variable 0x1000: {device_type}")
         except: 
             print("ERROR: Object 0x1000 not found on server!")
 
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     client = CanopenClient(channel="COM7")
     client.start()
     while True:
-        # client.test_sdo()
-        client.test_rpdo()
-        time.sleep(10)
+        client.test_sdo()
+        # client.test_tpdo()
+        time.sleep(0.001)
     client.stop()

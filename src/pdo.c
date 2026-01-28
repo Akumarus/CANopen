@@ -13,9 +13,9 @@ co_res_t co_subscribe_pdo(co_obj_t *co, uint32_t id, co_hdl_t callback) {
     return CANOPEN_OK;
 }
 
-co_res_t co_transmite_pdo(co_obj_t *co, uint32_t id, co_pdo_t *data, uint8_t dlc) {
+co_res_t co_transmite_pdo(co_obj_t *co, uint32_t id, uint8_t *data, uint8_t dlc) {
     co_msg_t msg = { .dlc = dlc, .id = id};
-    memcpy(&msg.frame, data, dlc);
+    memcpy(msg.data, data, dlc);
     fifo_state_t fifo_state = fifo_push(&co->fifo_tx, &msg);
     return (fifo_state == FIFO_OK) ? CANOPEN_OK : CANOPEN_ERROR;
 }

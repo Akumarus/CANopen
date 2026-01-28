@@ -48,7 +48,7 @@ co_res_t co_process_msg_tx(co_obj_t *co) {
             return CANOPEN_ERROR;
 
         if (fifo_pop(&co->fifo_tx, &msg) == FIFO_OK) {
-            port_can_send(msg.id, COB_RTR_DATA, co->ide, msg.dlc, msg.frame.row);
+            port_can_send(msg.id, COB_RTR_DATA, co->ide, msg.dlc, msg.data);
         }
     }
 
@@ -65,32 +65,32 @@ co_res_t co_process_msg_rx(co_obj_t *co) {
         co_node_t *node = co_get_node_obj(co, msg.id);
         uint32_t base_id = msg.id & 0x780;
         switch (base_id) {
-        case TYPE_SDO_TX:
+        case ID_TSDO:
             co_client_process_sdo(co, &msg);
             node->sdo.time = current_time;
             break;
-        case TYPE_SDO_RX:
+        case ID_RSDO:
             co_server_process_sdo(co, &msg);
             node->sdo.time = current_time;
             break;
-        case TYPE_PDO1_TX:
-        case TYPE_PDO2_TX:
-        case TYPE_PDO3_TX:
-        case TYPE_PDO4_TX:
-        case TYPE_PDO1_RX:
-        case TYPE_PDO2_RX:
-        case TYPE_PDO3_RX:
-        case TYPE_PDO4_RX:
+        case ID_RPDO1:
+        case ID_TPDO1:
+        case ID_RPDO2:
+        case ID_TPDO2:
+        case ID_RPDO3:
+        case ID_TPDO3:
+        case ID_RPDO4:
+        case ID_TPDO4:
             node->pdo.time = current_time;
             break;
-        case TYPE_NMT:
+        case ID_NMT:
             co_srv_proc_nmt(co, &msg);
             break;
-        case TYPE_SYNC:
+        case ID_SYNC:
             break;
         // case TYPE_EMCY:
         //     break;
-        case TYPE_HEARTBEAT:
+        case ID_HEARTBEAT:
             // co_cli_proc_heartbeat(co, &msg);
             node->heartbeat.time = current_time;
             break;
@@ -143,7 +143,7 @@ co_res_t co_config_callback(co_obj_t *co, uint32_t id, co_hdl_t callback) {
 
 co_res_t co_handle_messages(co_obj_t *co, uint32_t fifo) {
     co_msg_t msg;
-    port_can_receive_message(&msg.id, msg.frame.row, &msg.dlc, fifo);
+    port_can_receive_message(&msg.id, msg.data, &msg.dlc, fifo);
     fifo_push(&co->fifo_rx, &msg);
     return CANOPEN_OK;
 }
