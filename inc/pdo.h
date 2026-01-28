@@ -31,42 +31,9 @@
 /* │ Slave ← Master │ PDO4 RX     │ 0x500 + M   │ */
 /* └────────────────┴─────────────┴─────────────┘ */
 
-typedef enum {
-    PDO1 = 1,
-    PDO2 = 2,
-    PDO3 = 3,
-    PDO4 = 4,
-} pdo_num_t;
+#define RPDO1(node_id) (0x200 + ((node_id) & 0x7F))
 
-co_res_t co_subscribe_pdo(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_hdl_t callback);
-co_res_t co_transmite_pdo(co_obj_t *co, pdo_num_t pdo_num, uint8_t node_id, co_pdo_t *data,
-                         uint8_t dlc);
+co_res_t co_subscribe_pdo(co_obj_t *co, uint32_t id, co_hdl_t callback);
+co_res_t co_transmite_pdo(co_obj_t *co, uint32_t id, co_pdo_t *data, uint8_t dlc);
 
-/* RPDO Сообщения ----------------------------------------------------------------------*/
-inline co_res_t co_subscribe_pdo1(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
-    return co_subscribe_pdo(co, PDO1, node_id, callback);
-}
-inline co_res_t co_subscribe_pdo2(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
-    return co_subscribe_pdo(co, PDO2, node_id, callback);
-}
-inline co_res_t co_subscribe_pdo3(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
-    return co_subscribe_pdo(co, PDO3, node_id, callback);
-}
-inline co_res_t co_subscribe_pdo4(co_obj_t *co, uint8_t node_id, co_hdl_t callback) {
-    return co_subscribe_pdo(co, PDO4, node_id, callback);
-}
-
-/* TPDO Сообщения ----------------------------------------------------------------------*/
-inline co_res_t co_transmite_pdo1(co_obj_t *co, uint8_t node_id, co_pdo_t *data, uint8_t dlc) {
-    return co_transmite_pdo(co, PDO1, node_id, data, dlc);
-}
-inline co_res_t co_transmite_pdo2(co_obj_t *co, uint8_t node_id, co_pdo_t *data, uint8_t dlc) {
-    return co_transmite_pdo(co, PDO2, node_id, data, dlc);
-}
-inline co_res_t co_transmite_pdo3(co_obj_t *co, uint8_t node_id, co_pdo_t *data, uint8_t dlc) {
-    return co_transmite_pdo(co, PDO3, node_id, data, dlc);
-}
-inline co_res_t co_transmite_pdo4(co_obj_t *co, uint8_t node_id, co_pdo_t *data, uint8_t dlc) {
-    return co_transmite_pdo(co, PDO4, node_id, data, dlc);
-}
 #endif // PDO_H

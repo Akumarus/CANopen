@@ -141,11 +141,9 @@ void CAN_SendTestMessage(void) {
 }
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    CAN_RxHeaderTypeDef rxHeader;
-    uint8_t rxData[8];
-
-    if (HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &rxHeader, rxData) == HAL_OK) {
-    }
+    co_msg_t msg = {0};
+    canopen_get_msg_from_handler(&msg, CAN_RX_FIFO0);
+    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
@@ -156,7 +154,10 @@ void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
 
 void canopen_sdo_callback(co_obj_t *canopen, co_msg_t *msg) {}
 
-void pdo1_callback(co_msg_t *msg) {}
+void pdo_callback(co_msg_t *msg) { 
+    uint8_t lol;
+    lol++;
+}
 void sdo_callback(co_msg_t *msg) {}
 
 // CAN_TxHeaderTypeDef txHeader;
@@ -199,6 +200,7 @@ int main(void) {
     co_init(&canopen_server, CANOPEN_SERVER, NODE_ID2, COB_ID_STD);
     co_config_node_id(&canopen_server, 0);
 
+    co_subscribe_pdo(&canopen_server, RPDO1(2), pdo_callback);
     co_subscribe_sdo(&canopen_server, 2, sdo_callback);
     /* USER CODE END 2 */
 

@@ -66,8 +66,6 @@ co_res_t co_process_msg_tx(co_obj_t *co) {
 }
 
 co_res_t co_process_msg_rx(co_obj_t *co) {
-    assert(co != NULL);
-
     while (!fifo_is_empty(&co->fifo_rx)) {
         co_msg_t msg = {0};
         if (fifo_pop(&co->fifo_rx, &msg) != FIFO_OK)

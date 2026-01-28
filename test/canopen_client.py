@@ -146,18 +146,20 @@ class CanopenClient:
 
         # product_code = self.server_node.sdo[0x1018][2].raw
         # print(f"Product Code: 0x{product_code}")
-        try:  
-            # test_val = self.server_node.sdo[0x2000][0].raw
-            device_type = self.server_node.sdo.upload(0x1000, 0)
-            print(f"Test variable 0x1000: {device_type}")
+        try: 
+            data = 123
+            test_val = self.server_node.sdo.download(0x1000, 0, data)
+            # device_type = self.server_node.sdo.upload(0x1000, 0)
+            # print(f"Test variable 0x1000: {device_type}")
         except: 
             print("ERROR: Object 0x1000 not found on server!")
 
 
 if __name__ == "__main__":
-    client = CanopenClient(channel="/dev/ttyACM1")
+    client = CanopenClient(channel="COM7")
     client.start()
     while True:
-        client.test_sdo()
-        time.sleep(1)
+        # client.test_sdo()
+        client.test_rpdo()
+        time.sleep(10)
     client.stop()
