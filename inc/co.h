@@ -99,10 +99,8 @@ co_res_t co_process_msg_tx(co_obj_t *co);
 co_res_t co_process_msg_rx(co_obj_t *co);
 co_res_t co_process_timeout(co_obj_t *co);
 
-co_res_t co_config_callback(co_obj_t *canopen, uint32_t id, co_hdl_t callback);
-co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo);
-co_res_t canopen_send_msg_to_fifo_rx(co_obj_t *canopen, co_msg_t *msg);
+co_res_t co_config_callback(co_obj_t *co, uint32_t id, co_hdl_t callback);
+co_res_t co_handle_messages(co_obj_t *co, uint32_t fifo);
 co_node_t *co_get_node_obj(co_obj_t *canopen, uint8_t node_id);
-uint8_t canopen_get_node_id(co_msg_t *msg);
 
 #endif // CAN_OPEN_H

@@ -12,11 +12,6 @@ static void co_init_callbacks(co_obj_t *canopen);
 static void co_check_timeout(co_timeout_t *cob, uint32_t time);
 
 co_res_t co_init(co_obj_t *co, co_role_t role, uint8_t node_id, uint32_t ide) {
-    assert(co != NULL);
-    assert((role == CANOPEN_CLIENT) || (role == CANOPEN_SERVER));
-    assert(node_id < 128);
-    assert(ide == COB_ID_STD);
-
     co->ide = ide;
     co->role = role;
     co->node_id = node_id;
@@ -35,9 +30,6 @@ co_res_t co_init(co_obj_t *co, co_role_t role, uint8_t node_id, uint32_t ide) {
 }
 
 co_res_t co_config_node_id(co_obj_t *co, uint8_t node_id) {
-    assert(co != NULL);
-    assert(node_id < 128);
-
     // TODO быстрый перебор
     for (uint8_t i = 0; i < NODES_COUNT; i++) {
         if (co->node[i].id == 0xFF) {
@@ -50,8 +42,6 @@ co_res_t co_config_node_id(co_obj_t *co, uint8_t node_id) {
 }
 
 co_res_t co_process_msg_tx(co_obj_t *co) {
-    assert(co != NULL);
-
     co_msg_t msg = {0};
     while (!fifo_is_empty(&co->fifo_tx)) {
         if (port_get_free_mailboxes() == 0) // TODO Другой статус
@@ -108,20 +98,18 @@ co_res_t co_process_msg_rx(co_obj_t *co) {
             break;
         }
 
-        // // TODO Нужно вынести в отдельную функцию
-        // for (uint8_t i = 0; i < MAX_CALLBACKS; i++) {
-        //     if ((co->callbacks[i].id == msg.id) && (co->callbacks[i].callback != NULL)) {
-        //         co->callbacks[i].callback(&msg);
-        //     }
-        // }
+        // TODO Нужно вынести в отдельную функцию
+        for (uint8_t i = 0; i < MAX_CALLBACKS; i++) {
+            if ((co->callbacks[i].id == msg.id) && (co->callbacks[i].callback != NULL)) {
+                co->callbacks[i].callback(&msg);
+            }
+        }
     }
 
     return CANOPEN_OK;
 }
 
 co_res_t co_process_time(co_obj_t *co) {
-    assert(co != NULL);
-
     uint32_t current_time = port_get_timestamp() - co->timestamp;
     for (uint8_t i = 0; i < co->node_count; i++) {
         co_node_t *node = &co->node[i];
@@ -143,44 +131,21 @@ static void co_check_timeout(co_timeout_t *cob, uint32_t time) {
     cob->online = (elapsed > cob->timeout) ? true : false;
 }
 
-co_res_t co_config_callback(co_obj_t *canopen, uint32_t id, co_hdl_t callback) {
-    assert(canopen != NULL);
-    assert(callback != NULL);
-    assert(canopen->info.callbacks_count < MAX_CALLBACKS);
-
-    if (is_callback_register(canopen, id))
+co_res_t co_config_callback(co_obj_t *co, uint32_t id, co_hdl_t callback) {
+    if (is_callback_register(co, id))
         return CANOPEN_ERROR;
 
-    canopen->callbacks[canopen->info.callbacks_count].id = id;
-    canopen->callbacks[canopen->info.callbacks_count].callback = callback;
-    canopen->info.callbacks_count++;
-
+    co->callbacks[co->info.callbacks_count].id = id;
+    co->callbacks[co->info.callbacks_count].callback = callback;
+    co->info.callbacks_count++;
     return CANOPEN_OK;
 }
 
-co_res_t canopen_send_msg_to_fifo_rx(co_obj_t *canopen, co_msg_t *msg) {
-    assert(canopen != NULL);
-    assert(msg != NULL);
-
-    if (fifo_push(&canopen->fifo_rx, msg) != FIFO_OK)
-        return CANOPEN_ERROR;
-
+co_res_t co_handle_messages(co_obj_t *co, uint32_t fifo) {
+    co_msg_t msg;
+    port_can_receive_message(&msg.id, msg.frame.row, &msg.dlc, fifo);
+    fifo_push(&co->fifo_rx, &msg);
     return CANOPEN_OK;
-}
-
-co_res_t canopen_get_msg_from_handler(co_msg_t *msg, uint32_t fifo) {
-    assert(msg != NULL);
-    assert((fifo == COB_RX_FIFO0) || (fifo == COB_RX_FIFO1));
-
-    port_can_receive_message(&msg->id, msg->frame.row, &msg->dlc, fifo);
-    return CANOPEN_OK;
-}
-
-uint8_t canopen_get_node_id(co_msg_t *msg) {
-    assert(msg != NULL);
-
-    uint32_t cobid = msg->id;
-    return cobid & 0x7F;
 }
 
 co_node_t *co_get_node_obj(co_obj_t *co, uint8_t node_id) {

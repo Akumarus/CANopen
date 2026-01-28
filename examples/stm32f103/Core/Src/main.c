@@ -123,33 +123,12 @@ co_obj_t canopen_server;
 
 #define NODE_ID2 2
 
-void CAN_SendTestMessage(void) {
-    CAN_TxHeaderTypeDef txHeader;
-    uint8_t txData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
-    uint32_t txMailbox;
-
-    txHeader.StdId = 0x123; // Идентификатор сообщения
-    txHeader.ExtId = 0;
-    txHeader.IDE = CAN_ID_STD;   // Стандартный идентификатор
-    txHeader.RTR = CAN_RTR_DATA; // Data frame
-    txHeader.DLC = 8;            // Длина данных
-    txHeader.TransmitGlobalTime = DISABLE;
-
-    if (HAL_CAN_AddTxMessage(&hcan, &txHeader, txData, &txMailbox) != HAL_OK) {
-        Error_Handler();
-    }
-}
-
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    co_msg_t msg = {0};
-    canopen_get_msg_from_handler(&msg, CAN_RX_FIFO0);
-    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
+    co_handle_messages(&canopen_server, CAN_RX_FIFO0);
 }
 
 void HAL_CAN_RxFifo1MsgPendingCallback(CAN_HandleTypeDef *hcan) {
-    co_msg_t msg = {0};
-    canopen_get_msg_from_handler(&msg, CAN_RX_FIFO1);
-    canopen_send_msg_to_fifo_rx(&canopen_server, &msg);
+    co_handle_messages(&canopen_server, CAN_RX_FIFO1);
 }
 
 void canopen_sdo_callback(co_obj_t *canopen, co_msg_t *msg) {}
@@ -158,7 +137,10 @@ void pdo_callback(co_msg_t *msg) {
     uint8_t lol;
     lol++;
 }
-void sdo_callback(co_msg_t *msg) {}
+void sdo_callback(co_msg_t *msg) {
+    uint8_t lol;
+    lol++;
+}
 
 // CAN_TxHeaderTypeDef txHeader;
 /* USER CODE END 0 */
