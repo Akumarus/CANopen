@@ -121,7 +121,7 @@ co_obj_t canopen_server;
 #define NODE_ID_PLATE2 2
 #define NODE_ID_PLATE3 3
 
-#define NODE_ID2 2
+#define NODE 2
 
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan) {
     co_handle_messages(&canopen_server, CAN_RX_FIFO0);
@@ -179,11 +179,11 @@ int main(void) {
     /* USER CODE BEGIN 2 */
 
     /** CANopen Server example------------------------------------ */
-    co_init(&canopen_server, CANOPEN_SERVER, NODE_ID2, COB_ID_STD);
-    co_config_node_id(&canopen_server, 0);
+    co_init(&canopen_server, CANOPEN_SERVER, NODE, COB_ID_STD);
+    co_config_node_id(&canopen_server, NODE);
 
-    co_subscribe_pdo(&canopen_server, RPDO1(2), pdo_callback);
-    co_subscribe_sdo(&canopen_server, 2, sdo_callback);
+    co_subscribe_pdo(&canopen_server, RPDO1(NODE), pdo_callback);
+    co_subscribe_sdo(&canopen_server, RSDO1(NODE), sdo_callback);
     /* USER CODE END 2 */
 
     /* Infinite loop */

@@ -32,6 +32,14 @@
 /* └────────────────┴─────────────┴─────────────┘ */
 
 #define RPDO1(node_id) (0x200 + ((node_id) & 0x7F))
+#define RPDO2(node_id) (0x300 + ((node_id) & 0x7F))
+#define RPDO3(node_id) (0x400 + ((node_id) & 0x7F))
+#define RPDO4(node_id) (0x500 + ((node_id) & 0x7F))
+
+#define TPDO1(node_id) (0x180 + ((node_id) & 0x7F))
+#define TPDO2(node_id) (0x280 + ((node_id) & 0x7F))
+#define TPDO3(node_id) (0x380 + ((node_id) & 0x7F))
+#define TPDO4(node_id) (0x480 + ((node_id) & 0x7F))
 
 co_res_t co_subscribe_pdo(co_obj_t *co, uint32_t id, co_hdl_t callback);
 co_res_t co_transmite_pdo(co_obj_t *co, uint32_t id, co_pdo_t *data, uint8_t dlc);

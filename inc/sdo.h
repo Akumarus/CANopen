@@ -53,6 +53,9 @@
  *   │ │ └─────────── CCS=001
  */
 
+#define RSDO1(node_id) (0x580 + ((node_id) & 0x7F))
+#define TSDO1(node_id) (0x600 + ((node_id) & 0x7F))
+
 typedef enum {
     /** Основные команды ----------------------------------------------*/
     SDO_REQ_DOWNLOAD = 0x20, // 0010 0000 - Начало записи
