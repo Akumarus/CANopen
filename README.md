@@ -4,15 +4,15 @@ A minimalistic CANopen implementation for embedded systems.
 
 ##  Реализовано
 
-✅ **SDO Upload** 
-✅ **RPDO**
-✅ **TPDO**
-✅ **Object dictionary** 
-❌ SDO Download
-❌ NMT
-❌ SYNC, EMCY, TIME 
-❌ Heartbeat/Node Guarding  
-❌ LSS
+ - ✅ **SDO Upload** 
+ - ✅ **RPDO**
+ - ✅ **TPDO**
+ - ✅ **Object dictionary** 
+ - ❌ SDO Download
+ - ❌ NMT
+ - ❌ SYNC, EMCY, TIME 
+ - ❌ Heartbeat/Node Guarding 
+ - ❌ LSS
 
 ## Architecture
 ```
